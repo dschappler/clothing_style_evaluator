@@ -60,7 +60,7 @@ def create_pairs():
 def create_base_network():
     '''Base network to be shared (eq. to feature extraction).
     '''
-    seq = ResNet50(weights='imagenet', include_top=True)
+    seq = ResNet50(weights='imagenet', include_top=False)
     return seq
 
 
