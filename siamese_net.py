@@ -6,8 +6,8 @@ for mode details).
 from __future__ import absolute_import
 from __future__ import print_function
 import numpy as np
-from keras.models import Model
-from keras.layers import Input, Lambda
+from keras.models import Model, Sequential
+from keras.layers import Input, Lambda, Flatten, Dense
 from keras import backend as K
 from keras.applications.resnet50 import ResNet50, preprocess_input, decode_predictions
 import urllib, cStringIO
@@ -60,7 +60,10 @@ def create_pairs():
 def create_base_network():
     '''Base network to be shared (eq. to feature extraction).
     '''
-    seq = ResNet50(weights='imagenet', include_top=False)
+    seq = Sequential()
+    seq.add(ResNet50(weights='imagenet', include_top=False, input_tensor=Input(shape=(3,224,224))))
+    seq.add(Flatten())
+    seq.add(Dense(256))
     return seq
 
 
