@@ -9,10 +9,10 @@ import numpy as np
 from keras.models import Model, Sequential
 from keras.layers import Input, Lambda, Flatten, Dense
 from keras import backend as K
-from keras.applications.resnet50 import ResNet50, preprocess_input, decode_predictions
+from keras.applications.vgg16 import VGG16, preprocess_input, decode_predictions
 import urllib, cStringIO
 from keras.preprocessing.image import img_to_array, load_img
-
+from keras.optimizers import RMSprop
 
 def euclidean_distance(vects):
     x, y = vects
@@ -51,7 +51,7 @@ def create_pairs():
     '''
     pairs = []
     labels = []
-    z1, z2 = load_and_preprocess('http://ecx.images-amazon.com/images/I/51Xgw5HtYrL._SX395_.jpg'), load_and_preprocess('http://ecx.images-amazon.com/images/I/41QIEzKRBSL._SX342_.jpg')
+    z1, z2 = load_and_preprocess('http://www.pixempire.com/images/preview/black-circle-icon.jpg'), load_and_preprocess('http://www.masadaband.net/wp-content/uploads/2014/09/black-square.jpg')
     pairs += [z1, z2]
     labels += [0]
     return np.array(pairs), np.array(labels)
@@ -61,9 +61,9 @@ def create_base_network():
     '''Base network to be shared (eq. to feature extraction).
     '''
     seq = Sequential()
-    seq.add(ResNet50(weights='imagenet', include_top=False, input_tensor=Input(shape=(3,224,224))))
+    seq.add(VGG16(weights='imagenet', include_top=False, input_tensor=Input(shape=(3,224,224))))
     seq.add(Flatten())
-    seq.add(Dense(256))
+    seq.add(Dense(256, activation='relu'))
     return seq
 
 
@@ -97,14 +97,15 @@ model = Model(input=[input_a, input_b], output=distance)
 #model.get_weights()
 
 # train
-#rms = RMSprop()
-#model.compile(loss=contrastive_loss, optimizer=rms)
-#model.fit([tr_pairs[:, 0], tr_pairs[:, 1]], tr_y,
-#          validation_data=([te_pairs[:, 0], te_pairs[:, 1]], te_y),
-#          batch_size=128,
-#          nb_epoch=nb_epoch)
+rms = RMSprop()
+model.compile(loss=contrastive_loss, optimizer=rms)
+model.fit([tr_pairs[0], tr_pairs[1]], tr_y,
+          batch_size=1,
+          nb_epoch=1)
 
 # compute final accuracy on training and test sets
 pred = model.predict([tr_pairs[0], tr_pairs[1]])
+evalu = model.evaluate([tr_pairs[0], tr_pairs[1]], tr_y)
+testu = model.test_on_batch([tr_pairs[0], tr_pairs[1]], tr_y)
 tr_acc = compute_accuracy(pred, tr_y)
 print('* Accuracy on training set: %0.2f%%' % (100 * tr_acc))
