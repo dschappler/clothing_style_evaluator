@@ -6,6 +6,7 @@ for mode details).
 from __future__ import absolute_import
 from __future__ import print_function
 import numpy as np
+import pandas as pd
 from keras.models import Model, Sequential
 from keras.layers import Input, Lambda, Flatten, Dense
 from keras import backend as K
@@ -38,6 +39,14 @@ def load_and_preprocess(URL):
     image = np.expand_dims(image, axis=0)
     image = preprocess_input(image)
     return image
+    
+def load_images(csv_file):
+    data = pd.read_csv(csv_file, sep=';')
+    root_url = 'http://ecx.images-amazon.com/images/I/'
+    labels = data['score']
+    pic_1 = load_and_preprocess(root_url + data['pic1'][0])
+    pic_2 = load_and_preprocess(root_url + data['pic2'][0])
+    return np.array(pic_1, pic_2), np.array(labels)
 
 def pred_and_label(model, URL): 
     image = load_and_preprocess(URL)
@@ -75,6 +84,7 @@ def compute_accuracy(predictions, labels):
 
 # create training+test positive and negative pairs
 tr_pairs, tr_y = create_pairs()
+##tr_pairs, tr_y = load_images('val.csv')
 
 
 # network definition
