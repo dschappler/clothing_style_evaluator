@@ -32,6 +32,7 @@ def contrastive_loss(y_true, y_pred):
     margin = 1
     return K.mean(y_true * K.square(y_pred) + (1 - y_true) * K.square(K.maximum(margin - y_pred, 0)))
 
+
 def load_and_preprocess(URL):
     file = cStringIO.StringIO(urllib.urlopen(URL).read())
     image = load_img(file, target_size=(224, 224))
@@ -40,13 +41,18 @@ def load_and_preprocess(URL):
     image = preprocess_input(image)
     return image
     
+
 def load_images(csv_file):
+    pairs= [] 
     data = pd.read_csv(csv_file, sep=';')
     root_url = 'http://ecx.images-amazon.com/images/I/'
+    for i in range(len(data)):
+        pic_1 = load_and_preprocess(root_url + data['pic1'][i])
+        pic_2 = load_and_preprocess(root_url + data['pic2'][i])   
+        pairs += [[pic_1, pic_2]]
     labels = data['score']
-    pic_1 = load_and_preprocess(root_url + data['pic1'][0])
-    pic_2 = load_and_preprocess(root_url + data['pic2'][0])
-    return np.array(pic_1, pic_2), np.array(labels)
+    return np.array(pairs), np.array(labels)
+
 
 def pred_and_label(model, URL): 
     image = load_and_preprocess(URL)
@@ -54,6 +60,7 @@ def pred_and_label(model, URL):
     pred_label = (decode_predictions(pred)[0][0][1], decode_predictions(pred)[0][0][2])
     return pred_label 
     print('Predicted:', pred_label)
+
 
 def create_pairs():
     '''Positive and negative pair creation.
@@ -70,7 +77,7 @@ def create_base_network():
     '''Base network to be shared (eq. to feature extraction).
     '''
     seq = Sequential()
-    seq.add(VGG16(weights='imagenet', include_top=False, input_tensor=Input(shape=(3,224,224))))
+    seq.add(VGG16(weights='imagenet', include_top=False, input_tensor=Input(shape=(3,224,224,))))
     seq.add(Flatten())
     seq.add(Dense(256, activation='relu'))
     return seq
@@ -83,15 +90,15 @@ def compute_accuracy(predictions, labels):
 
 
 # create training+test positive and negative pairs
-tr_pairs, tr_y = create_pairs()
-##tr_pairs, tr_y = load_images('val.csv')
+#OLD: tr_pairs, tr_y = create_pairs()
+tr_pairs, tr_y = load_images('val.csv')
 
 
 # network definition
 base_network = create_base_network()
 
-input_a = Input(shape=(3,224,224))
-input_b = Input(shape=(3,224,224))
+input_a = Input(shape=(3,224,224,))
+input_b = Input(shape=(3,224,224,))
 
 # because we re-use the same instance `base_network`,
 # the weights of the network
@@ -109,13 +116,13 @@ model = Model(input=[input_a, input_b], output=distance)
 # train
 rms = RMSprop()
 model.compile(loss=contrastive_loss, optimizer=rms)
-model.fit([tr_pairs[0], tr_pairs[1]], tr_y,
+model.fit([tr_pairs[:, 0], tr_pairs[:, 1]], tr_y,
           batch_size=1,
           nb_epoch=1)
 
 # compute final accuracy on training and test sets
-pred = model.predict([tr_pairs[0], tr_pairs[1]])
-evalu = model.evaluate([tr_pairs[0], tr_pairs[1]], tr_y)
+pred = model.predict([tr_pairs[4, 0], tr_pairs[4, 1]])
+evalu = model.evaluate([tr_pairs[:, 0], tr_pairs[:, 1]], tr_y)
 testu = model.test_on_batch([tr_pairs[0], tr_pairs[1]], tr_y)
 tr_acc = compute_accuracy(pred, tr_y)
 print('* Accuracy on training set: %0.2f%%' % (100 * tr_acc))
