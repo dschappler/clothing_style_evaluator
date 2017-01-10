@@ -13,7 +13,7 @@ from keras import backend as K
 from keras.applications.vgg16 import VGG16, preprocess_input
 import urllib, cStringIO
 from keras.preprocessing.image import img_to_array, load_img
-from keras.optimizers import RMSprop
+from keras.optimizers import RMSprop, SGD
 
 def euclidean_distance(vects):
     x, y = vects
@@ -88,23 +88,25 @@ def siam_cnn():
 
 
 def train():
-    tr_pairs, tr_y = load_images('val.csv')
+    tr_pairs, tr_y = load_images('train.csv')
+    val_pairs, val_y = load_images('val.csv')
     print("Images loaded.")
     model = siam_cnn()
-    optimizer = RMSprop()
+    optimizer = SGD()
     model.compile(loss=contrastive_loss, optimizer=optimizer)
     print("Model compiled.")
-    model.fit([tr_pairs[:, 0], tr_pairs[:, 1]], tr_y,
-              batch_size=1,
-              nb_epoch=1)
+    model.fit([tr_pairs[:,0,0], tr_pairs[:,1,0]], tr_y,
+              validation_data=([val_pairs[:,0,0], val_pairs[:,1,0]], val_y),
+              batch_size=32,
+              nb_epoch=10)
     return model, tr_pairs, tr_y
     #TODO: optimal stopping, save weights, save model HISTORY
 
 
 def predict_and_evaluate():# compute final accuracy on training and test sets
     model, tr_pairs, tr_y = train()
-    te_pairs, te_y = load_images('test.csv')
-    pred = model.predict([tr_pairs[4, 0], tr_pairs[4, 1]])
+    te_pairs, te_y = load_images('tst.csv')
+    pred = model.predict([tr_pairs[:,0,0], tr_pairs[:,1,0]])
     #evalu = model.evaluate([tr_pairs[:, 0], tr_pairs[:, 1]], tr_y)
     #testu = model.test_on_batch([tr_pairs[0], tr_pairs[1]], tr_y)
     tr_acc = compute_accuracy(pred, tr_y)
