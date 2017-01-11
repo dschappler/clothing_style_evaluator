@@ -43,25 +43,35 @@ def load_and_preprocess(URL):
     
 
 def load_images(csv_file):
-    pairs= [] 
-    data = pd.read_csv(csv_file, sep=';')
+    data = pd.read_csv('val.csv', sep=';')
     root_url = 'http://ecx.images-amazon.com/images/I/'
     for i in range(len(data)):
-        pic_1 = load_and_preprocess(root_url + data['pic1'][i])
-        pic_2 = load_and_preprocess(root_url + data['pic2'][i])   
-        pairs += [[pic_1, pic_2]]
-    labels = data['score']
-    return np.array(pairs), np.array(labels)
+        data['pic1'][i] = load_and_preprocess(root_url + data['pic1'][i])
+        data['pic2'][i] = load_and_preprocess(root_url + data['pic2'][i])           
+    return data
 
 
-def create_base_network():
+def create_bottleneck_network():
     '''Base network to be shared (eq. to feature extraction).
     '''
     seq = Sequential()
     seq.add(VGG16(weights='imagenet', include_top=False, input_tensor=Input(shape=(3,224,224,))))
     seq.add(Flatten())
-    seq.add(Dense(256, activation='relu'))
     return seq
+    
+#def create_base_network():
+    
+    
+def save_bottleneck_features():
+    data = load_images('val.csv')     
+    print('Images loaded.')    
+    model = create_bottleneck_network()
+    print('Model loaded.')
+    for i in range(len(data)):
+        data['pic1'][i] = model.predict(data['pic1'][i])
+        data['pic2'][i] = model.predict(data['pic2'][i])
+    np.save(open('bottleneck_features.npy', 'w'), np.array(data.drop('score', axis=1)))
+    np.save(open('bottleneck_labels.npy', 'w'), np.array(data['score']))
 
 
 def compute_accuracy(predictions, labels):
@@ -92,7 +102,7 @@ def train():
     val_pairs, val_y = load_images('val.csv')
     print("Images loaded.")
     model = siam_cnn()
-    optimizer = SGD()
+    optimizer = RMSprop()
     model.compile(loss=contrastive_loss, optimizer=optimizer)
     print("Model compiled.")
     model.fit([tr_pairs[:,0,0], tr_pairs[:,1,0]], tr_y,
