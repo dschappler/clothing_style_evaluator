@@ -43,11 +43,12 @@ def load_and_preprocess(URL):
     
 
 def load_images(csv_file):
-    data = pd.read_csv('val.csv', sep=';')
+    data = pd.read_csv(csv_file, sep=';')
     root_url = 'http://ecx.images-amazon.com/images/I/'
     for i in range(len(data)):
         data['pic1'][i] = load_and_preprocess(root_url + data['pic1'][i])
-        data['pic2'][i] = load_and_preprocess(root_url + data['pic2'][i])           
+        data['pic2'][i] = load_and_preprocess(root_url + data['pic2'][i])
+    print('Images preprocessed.')           
     return data
 
 
@@ -59,7 +60,12 @@ def create_bottleneck_network():
     seq.add(Flatten())
     return seq
     
-#def create_base_network():
+    
+def create_base_network():
+    seq = Sequential()
+    seq.add(Dense(256, activation='sigmoid', input_dim=25088))
+    seq.add(Dense(128, activation='sigmoid'))
+    return seq
     
     
 def save_bottleneck_features():
@@ -67,11 +73,13 @@ def save_bottleneck_features():
     print('Images loaded.')    
     model = create_bottleneck_network()
     print('Model loaded.')
+    pairs = []
     for i in range(len(data)):
-        data['pic1'][i] = model.predict(data['pic1'][i])
-        data['pic2'][i] = model.predict(data['pic2'][i])
-    np.save(open('bottleneck_features.npy', 'w'), np.array(data.drop('score', axis=1)))
-    np.save(open('bottleneck_labels.npy', 'w'), np.array(data['score']))
+        pic_1 = model.predict(data['pic1'][i])[0]
+        pic_2 = model.predict(data['pic2'][i])[0]
+        pairs += [[pic_1, pic_2]]
+    np.save(open('bottleneck_features.npy', 'w'), np.array(pairs))
+    np.save(open('bottleneck_labels.npy', 'w'), np.asarray(data['score']))
 
 
 def compute_accuracy(predictions, labels):
@@ -82,8 +90,8 @@ def compute_accuracy(predictions, labels):
     
 def siam_cnn():
     base_network = create_base_network()
-    input_a = Input(shape=(3,224,224,))
-    input_b = Input(shape=(3,224,224,))
+    input_a = Input(shape=(25088,))
+    input_b = Input(shape=(25088,))
     # because we re-use the same instance `base_network`,
     # the weights of the network
     # will be shared across the two branches
@@ -98,15 +106,16 @@ def siam_cnn():
 
 
 def train():
-    tr_pairs, tr_y = load_images('train.csv')
-    val_pairs, val_y = load_images('val.csv')
+    tr_pairs = np.array(pairs)
+    tr_y = np.load(open('bottleneck_labels.npy'))
+    #val_pairs, val_y = load_images('val.csv')
     print("Images loaded.")
     model = siam_cnn()
     optimizer = RMSprop()
     model.compile(loss=contrastive_loss, optimizer=optimizer)
     print("Model compiled.")
-    model.fit([tr_pairs[:,0,0], tr_pairs[:,1,0]], tr_y,
-              validation_data=([val_pairs[:,0,0], val_pairs[:,1,0]], val_y),
+    model.fit([tr_pairs[:,0], tr_pairs[:,1]], tr_y,
+    #          validation_data=([val_pairs[:,0,0], val_pairs[:,1,0]], val_y),
               batch_size=32,
               nb_epoch=10)
     return model, tr_pairs, tr_y
