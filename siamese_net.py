@@ -14,6 +14,7 @@ from keras.applications.vgg16 import VGG16, preprocess_input
 import urllib, cStringIO
 from keras.preprocessing.image import img_to_array, load_img
 from keras.optimizers import RMSprop, SGD
+import progressbar as pb
 
 def euclidean_distance(vects):
     x, y = vects
@@ -69,16 +70,22 @@ def create_base_network():
     
     
 def save_bottleneck_features():
-    data = load_images('val.csv')     
+    data = load_images('train.csv')     
     print('Images loaded.')    
     model = create_bottleneck_network()
     print('Model loaded.')
     pairs = []
+    widgets = ['Test: ', pb.Percentage(), ' ', pb.Bar(marker='0',left='[',right=']'),
+           ' ', pb.ETA(), ' ', pb.FileTransferSpeed()]
+    pbar = pb.ProgressBar(widgets=widgets)
+    pbar.start()
     for i in range(len(data)):
         pic_1 = model.predict(data['pic1'][i])[0]
         pic_2 = model.predict(data['pic2'][i])[0]
         pairs += [[pic_1, pic_2]]
-    np.save(open('bottleneck_features.npy', 'w'), np.array(pairs))
+        pbar.update(i)
+    pbar.finish()
+    np.save(open('bottleneck_pairs.npy', 'w'), np.asarray(pairs))
     np.save(open('bottleneck_labels.npy', 'w'), np.asarray(data['score']))
 
 
@@ -86,7 +93,7 @@ def compute_accuracy(predictions, labels):
     '''Compute classification accuracy with a fixed threshold on distances.
     '''
     return np.mean(labels == (predictions.ravel() > 0.5))
-    
+   
     
 def siam_cnn():
     base_network = create_base_network()
@@ -106,8 +113,8 @@ def siam_cnn():
 
 
 def train():
-    tr_pairs = np.array(pairs)
-    tr_y = np.load(open('bottleneck_labels.npy'))
+    tr_pairs = np.load(open('bottleneck_pairs.npy', 'r'))
+    tr_y = np.load(open('bottleneck_labels.npy', 'r'))
     #val_pairs, val_y = load_images('val.csv')
     print("Images loaded.")
     model = siam_cnn()
