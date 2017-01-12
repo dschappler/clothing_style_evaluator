@@ -75,18 +75,18 @@ def save_bottleneck_features():
     model = create_bottleneck_network()
     print('Model loaded.')
     pairs = []
-    widgets = ['Test: ', pb.Percentage(), ' ', pb.Bar(marker='0',left='[',right=']'),
-           ' ', pb.ETA(), ' ', pb.FileTransferSpeed()]
-    pbar = pb.ProgressBar(widgets=widgets)
-    pbar.start()
+   # widgets = ['Test: ', pb.Percentage(), ' ', pb.Bar(marker='0',left='[',right=']'),
+   #        ' ', pb.ETA(), ' ', pb.FileTransferSpeed()]
+   # pbar = pb.ProgressBar(widgets=widgets, maxval=pb.UnknownLength)
+   # pbar.start()
     for i in range(len(data)):
         pic_1 = model.predict(data['pic1'][i])[0]
         pic_2 = model.predict(data['pic2'][i])[0]
         pairs += [[pic_1, pic_2]]
-        pbar.update(i)
-    pbar.finish()
-    np.save(open('bottleneck_pairs.npy', 'w'), np.asarray(pairs))
-    np.save(open('bottleneck_labels.npy', 'w'), np.asarray(data['score']))
+    #    pbar.update(i)
+   # pbar.finish()
+    np.save(open('bottleneck_pairs_b.npy', 'wb'), np.asarray(pairs))
+    np.save(open('bottleneck_labels_b.npy', 'wb'), np.asarray(data['score']))
 
 
 def compute_accuracy(predictions, labels):
@@ -113,8 +113,8 @@ def siam_cnn():
 
 
 def train():
-    tr_pairs = np.load(open('bottleneck_pairs.npy', 'r'))
-    tr_y = np.load(open('bottleneck_labels.npy', 'r'))
+    tr_pairs = np.load(open('bottleneck_pairs.npy', 'rb'))
+    tr_y = np.load(open('bottleneck_labels.npy', 'rb'))
     #val_pairs, val_y = load_images('val.csv')
     print("Images loaded.")
     model = siam_cnn()
