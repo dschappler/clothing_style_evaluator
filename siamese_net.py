@@ -45,10 +45,17 @@ def load_and_preprocess(URL):
 
 def load_images(csv_file):
     data = pd.read_csv(csv_file, sep=';')
+    print('csv read.')
     root_url = 'http://ecx.images-amazon.com/images/I/'
+    widgets = ['Test: ', pb.Percentage(), ' ', pb.Bar(marker='0',left='[',right=']'),
+           ' ', pb.ETA(), ' ', pb.FileTransferSpeed()]
+    pbar = pb.ProgressBar(widgets=widgets, maxval=70000)
+    pbar.start()
     for i in range(len(data)):
         data['pic1'][i] = load_and_preprocess(root_url + data['pic1'][i])
         data['pic2'][i] = load_and_preprocess(root_url + data['pic2'][i])
+        pbar.update(i)
+    pbar.finish()
     print('Images preprocessed.')           
     return data
 
@@ -70,14 +77,14 @@ def create_base_network():
     
     
 def save_bottleneck_features():
-    data = load_images('val.csv')     
+    data = load_images('train_l.csv')     
     print('Images loaded.')    
     model = create_bottleneck_network()
     print('Model loaded.')
     pairs = []
     widgets = ['Test: ', pb.Percentage(), ' ', pb.Bar(marker='0',left='[',right=']'),
            ' ', pb.ETA(), ' ', pb.FileTransferSpeed()]
-    pbar = pb.ProgressBar(widgets=widgets, maxval=1000)
+    pbar = pb.ProgressBar(widgets=widgets, maxval=70000)
     pbar.start()
     for i in range(len(data)):
         pic_1 = model.predict(data['pic1'][i])[0]
@@ -96,7 +103,7 @@ def compute_accuracy(predictions, labels):
     '''
     return np.mean(labels == (predictions.ravel() > 0.5))
    
-    
+   
 def siam_cnn():
     base_network = create_base_network()
     input_a = Input(shape=(25088,))
