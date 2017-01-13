@@ -70,23 +70,25 @@ def create_base_network():
     
     
 def save_bottleneck_features():
-    data = load_images('train.csv')     
+    data = load_images('val.csv')     
     print('Images loaded.')    
     model = create_bottleneck_network()
     print('Model loaded.')
     pairs = []
-   # widgets = ['Test: ', pb.Percentage(), ' ', pb.Bar(marker='0',left='[',right=']'),
-   #        ' ', pb.ETA(), ' ', pb.FileTransferSpeed()]
-   # pbar = pb.ProgressBar(widgets=widgets, maxval=pb.UnknownLength)
-   # pbar.start()
+    widgets = ['Test: ', pb.Percentage(), ' ', pb.Bar(marker='0',left='[',right=']'),
+           ' ', pb.ETA(), ' ', pb.FileTransferSpeed()]
+    pbar = pb.ProgressBar(widgets=widgets, maxval=1000)
+    pbar.start()
     for i in range(len(data)):
         pic_1 = model.predict(data['pic1'][i])[0]
         pic_2 = model.predict(data['pic2'][i])[0]
         pairs += [[pic_1, pic_2]]
-    #    pbar.update(i)
-   # pbar.finish()
-    np.save(open('bottleneck_pairs_b.npy', 'wb'), np.asarray(pairs))
-    np.save(open('bottleneck_labels_b.npy', 'wb'), np.asarray(data['score']))
+        pbar.update(i)
+    pbar.finish()
+    print('Finished. Saving features...')
+    np.save('bottleneck_pairs', np.asarray(pairs))
+    np.save('bottleneck_labels', np.asarray(data['score']))
+    print('Features saved.')
 
 
 def compute_accuracy(predictions, labels):
@@ -113,9 +115,9 @@ def siam_cnn():
 
 
 def train():
-    tr_pairs = np.load(open('bottleneck_pairs.npy', 'rb'))
-    tr_y = np.load(open('bottleneck_labels.npy', 'rb'))
-    #val_pairs, val_y = load_images('val.csv')
+    tr_pairs = np.load('bottleneck_pairs.npy')
+    tr_y = np.load('bottleneck_labels.npy')
+    #TODO: train/test/val split
     print("Images loaded.")
     model = siam_cnn()
     optimizer = RMSprop()
@@ -140,6 +142,8 @@ def predict_and_evaluate():# compute final accuracy on training and test sets
     pred = model.predict([te_pairs[4, 0], te_pairs[4, 1]])
     te_acc = compute_accuracy(pred, te_y)
     print('* Accuracy on test set: %0.2f%%' % (100 * te_acc))
+
+
 
 
 #TODO: visualize training
