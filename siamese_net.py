@@ -40,6 +40,7 @@ def load_and_preprocess(URL):
     image = img_to_array(image)
     image = np.expand_dims(image, axis=0)
     image = preprocess_input(image)
+    file.close()
     return image
     
 
@@ -48,10 +49,10 @@ def load_images(csv_file):
     print('csv read.')
     root_url = 'http://ecx.images-amazon.com/images/I/'
     widgets = ['Test: ', pb.Percentage(), ' ', pb.Bar(marker='0',left='[',right=']'),
-           ' ', pb.ETA(), ' ', pb.FileTransferSpeed()]
-    pbar = pb.ProgressBar(widgets=widgets, maxval=70000)
+           ' ', pb.ETA(), ' ', pb.FileTransferSpeed(), ' ']
+    pbar = pb.ProgressBar(widgets=widgets, maxval=len(data))
     pbar.start()
-    for i in range(len(data)):
+    for i in range(len(data)): 
         data['pic1'][i] = load_and_preprocess(root_url + data['pic1'][i])
         data['pic2'][i] = load_and_preprocess(root_url + data['pic2'][i])
         pbar.update(i)
@@ -77,14 +78,14 @@ def create_base_network():
     
     
 def save_bottleneck_features():
-    data = load_images('train_l.csv')     
+    data = load_images('train01.csv')     
     print('Images loaded.')    
     model = create_bottleneck_network()
     print('Model loaded.')
     pairs = []
     widgets = ['Test: ', pb.Percentage(), ' ', pb.Bar(marker='0',left='[',right=']'),
-           ' ', pb.ETA(), ' ', pb.FileTransferSpeed()]
-    pbar = pb.ProgressBar(widgets=widgets, maxval=70000)
+           ' ', pb.ETA(), ' ', pb.FileTransferSpeed(), ' ']
+    pbar = pb.ProgressBar(widgets=widgets, maxval=len(data))
     pbar.start()
     for i in range(len(data)):
         pic_1 = model.predict(data['pic1'][i])[0]
@@ -93,8 +94,8 @@ def save_bottleneck_features():
         pbar.update(i)
     pbar.finish()
     print('Finished. Saving features...')
-    np.save('bottleneck_pairs', np.asarray(pairs))
-    np.save('bottleneck_labels', np.asarray(data['score']))
+    np.save('bottleneck_pairs_01', np.asarray(pairs))
+    np.save('bottleneck_labels_01', np.asarray(data['score']))
     print('Features saved.')
 
 
