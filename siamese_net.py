@@ -15,6 +15,9 @@ import urllib, cStringIO
 from keras.preprocessing.image import img_to_array, load_img
 from keras.optimizers import RMSprop, SGD
 import progressbar as pb
+#from sklearn.cross_validation import train_test_split
+#from sklearn.metrics import roc_auc_score
+
 
 def euclidean_distance(vects):
     x, y = vects
@@ -78,7 +81,7 @@ def create_base_network():
     
     
 def save_bottleneck_features():
-    data = load_images('train01.csv')     
+    data = load_images('train07.csv')    
     print('Images loaded.')    
     model = create_bottleneck_network()
     print('Model loaded.')
@@ -94,8 +97,8 @@ def save_bottleneck_features():
         pbar.update(i)
     pbar.finish()
     print('Finished. Saving features...')
-    np.save('bottleneck_pairs_01', np.asarray(pairs))
-    np.save('bottleneck_labels_01', np.asarray(data['score']))
+    np.save('bottleneck_pairs_07', np.asarray(pairs))
+    np.save('bottleneck_labels_07', np.asarray(data['score']))
     print('Features saved.')
 
 
@@ -123,9 +126,9 @@ def siam_cnn():
 
 
 def train():
-    tr_pairs = np.load('bottleneck_pairs.npy')
-    tr_y = np.load('bottleneck_labels.npy')
-    #TODO: train/test/val split
+    tr_pairs = np.load('bottleneck_pairs_01.npy')
+    tr_y = np.load('bottleneck_labels_01.npy')
+    #TODO: set seed, train/test/val split
     print("Images loaded.")
     model = siam_cnn()
     optimizer = RMSprop()
@@ -165,3 +168,5 @@ def predict_and_evaluate():# compute final accuracy on training and test sets
 
 if __name__=="__main__":
     train()
+    
+#TODO: crossvalidation
