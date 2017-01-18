@@ -51,7 +51,7 @@ def load_images(csv_file):
     data = pd.read_csv(csv_file, sep=';')
     print('csv read.')
     root_url = 'http://ecx.images-amazon.com/images/I/'
-    widgets = ['Test: ', pb.Percentage(), ' ', pb.Bar(marker='0',left='[',right=']'),
+    widgets = ['Progress: ', pb.Percentage(), ' ', pb.Bar(marker='0',left='[',right=']'),
            ' ', pb.ETA(), ' ', pb.FileTransferSpeed(), ' ']
     pbar = pb.ProgressBar(widgets=widgets, maxval=len(data))
     pbar.start()
@@ -81,12 +81,12 @@ def create_base_network():
     
     
 def save_bottleneck_features():
-    data = load_images('train07.csv')    
+    data = load_images('train10.csv')    
     print('Images loaded.')    
     model = create_bottleneck_network()
     print('Model loaded.')
     pairs = []
-    widgets = ['Test: ', pb.Percentage(), ' ', pb.Bar(marker='0',left='[',right=']'),
+    widgets = ['Progress: ', pb.Percentage(), ' ', pb.Bar(marker='0',left='[',right=']'),
            ' ', pb.ETA(), ' ', pb.FileTransferSpeed(), ' ']
     pbar = pb.ProgressBar(widgets=widgets, maxval=len(data))
     pbar.start()
@@ -97,8 +97,8 @@ def save_bottleneck_features():
         pbar.update(i)
     pbar.finish()
     print('Finished. Saving features...')
-    np.save('bottleneck_pairs_07', np.asarray(pairs))
-    np.save('bottleneck_labels_07', np.asarray(data['score']))
+    np.save('bottleneck_pairs_10', np.asarray(pairs))
+    np.save('bottleneck_labels_10', np.asarray(data['score']))
     print('Features saved.')
 
 
