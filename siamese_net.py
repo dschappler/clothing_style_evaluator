@@ -15,7 +15,7 @@ import urllib, cStringIO
 from keras.preprocessing.image import img_to_array, load_img
 from keras.optimizers import RMSprop, SGD
 import progressbar as pb
-#from sklearn.cross_validation import train_test_split
+from sklearn.cross_validation import train_test_split
 #from sklearn.metrics import roc_auc_score
 
 
@@ -34,7 +34,7 @@ def contrastive_loss(y_true, y_pred):
     http://yann.lecun.com/exdb/publis/pdf/hadsell-chopra-lecun-06.pdf
     '''
     margin = 1
-    return K.mean(y_true * K.square(y_pred) + (1 - y_true) * K.square(K.maximum(margin - y_pred, 0)))
+    return K.mean((1 - y_true) * K.square(y_pred) + y_true * K.square(K.maximum(margin - y_pred, 0)))
 
 
 def load_and_preprocess(URL):
@@ -75,13 +75,13 @@ def create_bottleneck_network():
     
 def create_base_network():
     seq = Sequential()
-    seq.add(Dense(256, activation='sigmoid', input_dim=25088))
-    seq.add(Dense(128, activation='sigmoid'))
+    seq.add(Dense(1, activation='sigmoid', input_dim=25088))
+   ## seq.add(Dense(128, activation='sigmoid'))
     return seq
     
     
 def save_bottleneck_features():
-    data = load_images('train10.csv')    
+    data = load_images('train12.csv')    
     print('Images loaded.')    
     model = create_bottleneck_network()
     print('Model loaded.')
@@ -97,8 +97,8 @@ def save_bottleneck_features():
         pbar.update(i)
     pbar.finish()
     print('Finished. Saving features...')
-    np.save('bottleneck_pairs_10', np.asarray(pairs))
-    np.save('bottleneck_labels_10', np.asarray(data['score']))
+    np.save('bottleneck_pairs_12', np.asarray(pairs))
+    np.save('bottleneck_labels_12', np.asarray(data['score']))
     print('Features saved.')
 
 
@@ -126,18 +126,19 @@ def siam_cnn():
 
 
 def train():
-    tr_pairs = np.load('bottleneck_pairs_01.npy')
-    tr_y = np.load('bottleneck_labels_01.npy')
-    #TODO: set seed, train/test/val split
-    print("Images loaded.")
+    print("Loading pairs..")
+    tr_pairs = np.load('bottleneck_pairs.npy')
+    print("Loading labels..")
+    tr_y = np.load('bottleneck_labels.npy')
+    print("Data loaded.")
     model = siam_cnn()
-    optimizer = RMSprop()
+    optimizer = SGD()
     model.compile(loss=contrastive_loss, optimizer=optimizer)
     print("Model compiled.")
     model.fit([tr_pairs[:,0], tr_pairs[:,1]], tr_y,
-    #          validation_data=([val_pairs[:,0,0], val_pairs[:,1,0]], val_y),
-              batch_size=32,
-              nb_epoch=10)
+              validation_split=.3,
+              batch_size=128,
+              nb_epoch=5)
     return model, tr_pairs, tr_y
     #TODO: optimal stopping, save weights, save model HISTORY
 
