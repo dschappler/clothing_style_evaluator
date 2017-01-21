@@ -8,15 +8,14 @@ from __future__ import print_function
 import numpy as np
 import pandas as pd
 from keras.models import Model, Sequential
-from keras.layers import Input, Lambda, Flatten, Dense
+from keras.layers import Input, Lambda, Flatten, Dense, Dropout
 from keras import backend as K
 from keras.applications.vgg16 import VGG16, preprocess_input
 import urllib, cStringIO
 from keras.preprocessing.image import img_to_array, load_img
 from keras.optimizers import RMSprop, SGD
 import progressbar as pb
-from sklearn.cross_validation import train_test_split
-#from sklearn.metrics import roc_auc_score
+from sklearn.metrics import roc_auc_score
 
 
 def euclidean_distance(vects):
@@ -75,8 +74,9 @@ def create_bottleneck_network():
     
 def create_base_network():
     seq = Sequential()
-    seq.add(Dense(1, activation='sigmoid', input_dim=25088))
-   ## seq.add(Dense(128, activation='sigmoid'))
+    seq.add(Dense(256, activation='relu', input_dim=25088))
+    seq.add(Dropout(0.5))
+    seq.add(Dense(1, activation='sigmoid'))
     return seq
     
     
@@ -105,7 +105,7 @@ def save_bottleneck_features():
 def compute_accuracy(predictions, labels):
     '''Compute classification accuracy with a fixed threshold on distances.
     '''
-    return np.mean(labels == (predictions.ravel() > 0.5))
+    return np.mean(labels == (predictions.ravel() < 0.5))
    
    
 def siam_cnn():
@@ -128,6 +128,7 @@ def siam_cnn():
 def train():
     print("Loading pairs..")
     tr_pairs = np.load('bottleneck_pairs.npy')
+    tr_pairs = (tr_pairs - np.min(tr_pairs)) / (np.max(tr_pairs) - np.min(tr_pairs))
     print("Loading labels..")
     tr_y = np.load('bottleneck_labels.npy')
     print("Data loaded.")
@@ -137,7 +138,7 @@ def train():
     print("Model compiled.")
     model.fit([tr_pairs[:,0], tr_pairs[:,1]], tr_y,
               validation_split=.3,
-              batch_size=128,
+              batch_size=32,
               nb_epoch=5)
     return model, tr_pairs, tr_y
     #TODO: optimal stopping, save weights, save model HISTORY
@@ -154,16 +155,10 @@ def predict_and_evaluate():# compute final accuracy on training and test sets
     pred = model.predict([te_pairs[4, 0], te_pairs[4, 1]])
     te_acc = compute_accuracy(pred, te_y)
     print('* Accuracy on test set: %0.2f%%' % (100 * te_acc))
-
-
-
+    
 
 #TODO: visualize training
-
-
 #TODO: ROC & AUC calculation & visualization
-
-
 #TODO: t-sne & visualization
 
 
