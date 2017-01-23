@@ -78,9 +78,9 @@ def create_bottleneck_network():
 def create_base_network():
     #TODO: add more regularization
     seq = Sequential()
-    seq.add(Dense(64, activation='relu', input_dim=25088))
-    seq.add(Dropout(0.1))
-    seq.add(Dense(10, activation='relu'))
+    seq.add(Dense(256, activation='sigmoid', input_dim=25088))
+    seq.add(Dropout(0.2))
+    seq.add(Dense(5, activation='sigmoid'))
     return seq
     
     
@@ -108,25 +108,25 @@ def bottleneck_features(save=False):
     
     print("Loading pairs..")
     pairdata = np.load('bottleneck_pairs.npy')
-    time.sleep(3)
+    max_value = np.max(pairdata)
+    pairdata /= max_value #(pairdata - np.min(pairdata)) / (np.max(pairdata) - np.min(pairdata))
     print("Loading labels..")
     labeldata = np.load('bottleneck_labels.npy')
-    time.sleep(3)
     print("Data loaded.")
-    max_value = np.max(pairdata)
-    pairdata /= max_value #(pairdata - np.min(pairdata)) / (np.max(pairdata) - np.min(pairdata))    
     print('Splitting data to get test set..')    
+
     X, X_test, y, y_test = train_test_split(pairdata, labeldata, 
                                             test_size=.2,
                                             random_state=7,
                                             stratify=labeldata)
     time.sleep(3)
-    print('Splitting data to get validation set..')    
+    pairdata, labeldata = None, None
+    print('Splitting data to get validation set..')
     X_train, X_val, y_train, y_val = train_test_split(X, y, 
                                                       test_size=.25,
                                                       random_state=7,
                                                       stratify=y)
-    del X, y
+    X, y = None, None
     return X_train, X_val, X_test, y_train, y_val, y_test
 
 
@@ -154,25 +154,26 @@ def siam_cnn():
 def train_and_predict():
     X_train, X_val, X_test, y_train, y_val, y_test = bottleneck_features()
     model = siam_cnn()
-    optimizer = RMSprop(clipnorm=0.1)
+    optimizer = RMSprop(clipnorm=0.01)
     model.compile(loss=contrastive_loss, optimizer=optimizer)
     print("Model compiled.")
     model.fit([X_train[:,0], X_train[:,1]], y_train,
               validation_data = ([X_val[:,0], X_val[:,1]], y_val),
               batch_size=128,
-              nb_epoch=5)
+              nb_epoch=15)
+    model.save('my_model_15.h5')
     #TODO: train acc, learning curve, optimal stopping, save weights, save model HISTORY
     y_pred = model.predict([X_test[:,0], X_test[:,0]])
     return y_test, y_pred
 
-
+np.sum(y_pred)
 def evaluate():
     # compute final accuracy on training and test sets
     y_test, y_pred = train_and_predict()
     te_acc = compute_accuracy(y_pred, y_test)
     print('* Accuracy on test set: %0.2f%%' % (100 * te_acc))
     
-    fpr, tpr, _ = roc_curve(y_test, y_pred, pos_label=1)
+    fpr, tpr, _ = roc_curve(y_test, 1-y_pred, pos_label=1)
     roc_auc = roc_auc_score(fpr, tpr)
        
     ##############################################################################
