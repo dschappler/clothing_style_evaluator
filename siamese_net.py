@@ -5,6 +5,7 @@ for mode details).
 '''
 from __future__ import absolute_import
 from __future__ import print_function
+import time
 import urllib, cStringIO
 import progressbar as pb
 import numpy as np
@@ -77,9 +78,9 @@ def create_bottleneck_network():
 def create_base_network():
     #TODO: add more regularization
     seq = Sequential()
-    seq.add(Dense(256, activation='relu', input_dim=25088))
-    seq.add(Dropout(0.5))
-    seq.add(Dense(1, activation='sigmoid'))
+    seq.add(Dense(64, activation='relu', input_dim=25088))
+    seq.add(Dropout(0.1))
+    seq.add(Dense(10, activation='relu'))
     return seq
     
     
@@ -107,18 +108,25 @@ def bottleneck_features(save=False):
     
     print("Loading pairs..")
     pairdata = np.load('bottleneck_pairs.npy')
-    pairdata = (pairdata - np.min(pairdata)) / (np.max(pairdata) - np.min(pairdata))
+    time.sleep(3)
     print("Loading labels..")
     labeldata = np.load('bottleneck_labels.npy')
+    time.sleep(3)
     print("Data loaded.")
-    X_train, X_test, y_train, y_test = train_test_split(pairdata, labeldata, 
-                                                        test_size=.2,
-                                                        random_state=7,
-                                                        stratify=[1])
-    X_train, X_val, y_train, y_val = train_test_split(X_train, y_train, 
-                                                        test_size=.2,
-                                                        random_state=7,
-                                                        stratify=[1])
+    max_value = np.max(pairdata)
+    pairdata /= max_value #(pairdata - np.min(pairdata)) / (np.max(pairdata) - np.min(pairdata))    
+    print('Splitting data to get test set..')    
+    X, X_test, y, y_test = train_test_split(pairdata, labeldata, 
+                                            test_size=.2,
+                                            random_state=7,
+                                            stratify=labeldata)
+    time.sleep(3)
+    print('Splitting data to get validation set..')    
+    X_train, X_val, y_train, y_val = train_test_split(X, y, 
+                                                      test_size=.25,
+                                                      random_state=7,
+                                                      stratify=y)
+    del X, y
     return X_train, X_val, X_test, y_train, y_val, y_test
 
 
@@ -146,12 +154,12 @@ def siam_cnn():
 def train_and_predict():
     X_train, X_val, X_test, y_train, y_val, y_test = bottleneck_features()
     model = siam_cnn()
-    optimizer = RMSprop()
+    optimizer = RMSprop(clipnorm=0.1)
     model.compile(loss=contrastive_loss, optimizer=optimizer)
     print("Model compiled.")
     model.fit([X_train[:,0], X_train[:,1]], y_train,
               validation_data = ([X_val[:,0], X_val[:,1]], y_val),
-              batch_size=32,
+              batch_size=128,
               nb_epoch=5)
     #TODO: train acc, learning curve, optimal stopping, save weights, save model HISTORY
     y_pred = model.predict([X_test[:,0], X_test[:,0]])
