@@ -11,12 +11,12 @@ import progressbar as pb
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
-from keras.models import Model, Sequential
+from keras.models import Model, Sequential, load_model
 from keras.layers import Input, Lambda, Flatten, Dense, Dropout
 from keras import backend as K
 from keras.applications.vgg16 import VGG16, preprocess_input
 from keras.preprocessing.image import img_to_array, load_img
-from keras.optimizers import RMSprop#, SGD
+from keras.optimizers import RMSprop#, SGD, Adam
 from sklearn.metrics import roc_curve, roc_auc_score
 from sklearn.cross_validation import train_test_split
 
@@ -78,13 +78,13 @@ def create_bottleneck_network():
 def create_base_network():
     #TODO: add more regularization
     seq = Sequential()
-    seq.add(Dense(256, activation='sigmoid', input_dim=25088))
+    seq.add(Dense(64, activation='sigmoid', input_dim=25088))
     seq.add(Dropout(0.2))
-    seq.add(Dense(5, activation='sigmoid'))
+    seq.add(Dense(64, activation='sigmoid'))
     return seq
     
     
-def bottleneck_features(save=False):
+def bottleneck_features(save=False, generate=False):
     if save:
         data = load_images('train.csv')    
         print('Images loaded.')    
@@ -106,34 +106,52 @@ def bottleneck_features(save=False):
         np.save('bottleneck_labels', np.asarray(data['score']))
         print('Features saved.')
     
-    print("Loading pairs..")
-    pairdata = np.load('bottleneck_pairs.npy')
-    max_value = np.max(pairdata)
-    pairdata /= max_value #(pairdata - np.min(pairdata)) / (np.max(pairdata) - np.min(pairdata))
-    print("Loading labels..")
-    labeldata = np.load('bottleneck_labels.npy')
-    print("Data loaded.")
-    print('Splitting data to get test set..')    
-
-    X, X_test, y, y_test = train_test_split(pairdata, labeldata, 
-                                            test_size=.2,
-                                            random_state=7,
-                                            stratify=labeldata)
-    time.sleep(3)
-    pairdata, labeldata = None, None
-    print('Splitting data to get validation set..')
-    X_train, X_val, y_train, y_val = train_test_split(X, y, 
-                                                      test_size=.25,
-                                                      random_state=7,
-                                                      stratify=y)
-    X, y = None, None
+    if generate:
+        print("Loading pairs..")
+        pairdata = np.load('bottleneck_pairs.npy')
+        max_value = np.max(pairdata)
+        pairdata /= max_value #(pairdata - np.min(pairdata)) / (np.max(pairdata) - np.min(pairdata))
+        time.sleep(3)    
+        print("Loading labels..")
+        labeldata = np.load('bottleneck_labels.npy')
+        print("Data loaded.")
+        time.sleep(3)    
+        print('Splitting data to get test set..')    
+    
+        X, X_test, y, y_test = train_test_split(pairdata, labeldata, 
+                                                test_size=.2,
+                                                random_state=7,
+                                                stratify=labeldata)
+        time.sleep(3)
+        pairdata, labeldata = None, None
+        print('Splitting data to get validation set..')
+        X_train, X_val, y_train, y_val = train_test_split(X, y, 
+                                                          test_size=.25,
+                                                          random_state=7,
+                                                          stratify=y)
+        X, y = None, None
+        np.save('X_train', X_train) 
+        np.save('X_val', X_val)
+        np.save('X_test', X_test)
+        np.save('y_train', y_train)
+        np.save('y_val', y_val)
+        np.save('y_test', y_test)
+    
+    print('Loading data..')    
+    X_train = np.load('X_train.npy')     
+    X_val = np.load('X_val.npy')
+    X_test = np.load('X_test.npy')
+    y_train = np.load('y_train.npy')
+    y_val = np.load('y_val.npy')
+    y_test = np.load('y_test.npy')
+    print('Data loaded.')
     return X_train, X_val, X_test, y_train, y_val, y_test
 
 
 def compute_accuracy(predictions, labels):
     '''Compute classification accuracy with a fixed threshold on distances.
     '''
-    return np.mean(labels == (predictions.ravel() < 0.5))
+    return np.mean(labels == (predictions.ravel() >= 0.5))
    
    
 def siam_cnn():
@@ -154,27 +172,30 @@ def siam_cnn():
 def train_and_predict():
     X_train, X_val, X_test, y_train, y_val, y_test = bottleneck_features()
     model = siam_cnn()
-    optimizer = RMSprop(clipnorm=0.01)
+    optimizer = RMSprop(clipnorm=0.1)
     model.compile(loss=contrastive_loss, optimizer=optimizer)
     print("Model compiled.")
+    model = load_model('my_model_dense64_sigmoid_dropout02_dense64_sigmoid.h5', custom_objects={'contrastive_loss': contrastive_loss})
     model.fit([X_train[:,0], X_train[:,1]], y_train,
               validation_data = ([X_val[:,0], X_val[:,1]], y_val),
               batch_size=128,
-              nb_epoch=15)
-    model.save('my_model_15.h5')
+              nb_epoch=1)
+    time.sleep(5)
+    model.save('my_model_dense64_sigmoid_dropout02_dense64_sigmoid.h5')
+    
     #TODO: train acc, learning curve, optimal stopping, save weights, save model HISTORY
-    y_pred = model.predict([X_test[:,0], X_test[:,0]])
+    y_pred = model.predict([X_test[:,0], X_test[:,1]])
     return y_test, y_pred
 
-np.sum(y_pred)
+
 def evaluate():
     # compute final accuracy on training and test sets
     y_test, y_pred = train_and_predict()
     te_acc = compute_accuracy(y_pred, y_test)
     print('* Accuracy on test set: %0.2f%%' % (100 * te_acc))
     
-    fpr, tpr, _ = roc_curve(y_test, 1-y_pred, pos_label=1)
-    roc_auc = roc_auc_score(fpr, tpr)
+    fpr, tpr, thresholds = roc_curve(y_test, y_pred)  #, pos_label=1
+    roc_auc = roc_auc_score(y_test, y_pred)
        
     ##############################################################################
     # Plot of a ROC curve for a specific class
