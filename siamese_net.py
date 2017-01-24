@@ -169,20 +169,28 @@ def siam_cnn():
     return model
 
 
-def train_and_predict():
+def train_and_predict(build_new=False):
+    
     X_train, X_val, X_test, y_train, y_val, y_test = bottleneck_features()
-    model = siam_cnn()
-    optimizer = RMSprop(clipnorm=0.1)
-    model.compile(loss=contrastive_loss, optimizer=optimizer)
-    print("Model compiled.")
-    model = load_model('my_model_dense64_sigmoid_dropout02_dense64_sigmoid.h5', custom_objects={'contrastive_loss': contrastive_loss})
+    
+    if build_new:
+        model = siam_cnn()
+        optimizer = RMSprop(clipnorm=0.1)
+        model.compile(loss=contrastive_loss, optimizer=optimizer)
+        print("Model compiled.")
+    else:
+        model = load_model('my_model_dense64_sigmoid_dropout02_dense64_sigmoid.h5', custom_objects={'contrastive_loss': contrastive_loss})
+        print('Model loaded.')
+        
     model.fit([X_train[:,0], X_train[:,1]], y_train,
               validation_data = ([X_val[:,0], X_val[:,1]], y_val),
               batch_size=128,
               nb_epoch=1)
+              
     time.sleep(5)
+    print('Saving model..')    
     model.save('my_model_dense64_sigmoid_dropout02_dense64_sigmoid.h5')
-    
+    print('Model saved.')
     #TODO: train acc, learning curve, optimal stopping, save weights, save model HISTORY
     y_pred = model.predict([X_test[:,0], X_test[:,1]])
     return y_test, y_pred
@@ -200,7 +208,7 @@ def evaluate():
     ##############################################################################
     # Plot of a ROC curve for a specific class
     plt.figure()
-    plt.plot(fpr, tpr, label='ROC curve (area = %0.2f)' % roc_auc)
+    plt.plot(fpr, tpr, label='ROC curve (area = %0.3f)' % roc_auc)
     plt.plot([0, 1], [0, 1], 'k--')
     plt.xlim([0.0, 1.0])
     plt.ylim([0.0, 1.05])
