@@ -13,6 +13,7 @@ import pandas as pd
 import matplotlib.pyplot as plt
 from keras.models import Model, Sequential, load_model
 from keras.layers import Input, Lambda, Flatten, Dense, Dropout
+from keras.regularizers import l1l2
 from keras import backend as K
 from keras.applications.vgg16 import VGG16, preprocess_input
 from keras.preprocessing.image import img_to_array, load_img
@@ -76,11 +77,10 @@ def create_bottleneck_network():
     
     
 def create_base_network():
-    #TODO: add more regularization
     seq = Sequential()
-    seq.add(Dense(64, activation='sigmoid', input_dim=25088))
-    seq.add(Dropout(0.2))
-    seq.add(Dense(64, activation='sigmoid'))
+    seq.add(Dense(128, activation='sigmoid', W_regularizer=l1l2(l1=1e-6, l2=1e-6), input_dim=25088))
+    seq.add(Dropout(0.3))
+    seq.add(Dense(64, activation='sigmoid', W_regularizer=l1l2(l1=1e-6, l2=1e-6)))
     return seq
     
     
@@ -165,7 +165,6 @@ def siam_cnn():
     processed_b = base_network(input_b)
     distance = Lambda(euclidean_distance, output_shape=eucl_dist_output_shape)([processed_a, processed_b])
     model = Model(input=[input_a, input_b], output=distance)
-    #TODO: model.summary(), model.get_config(), model.get_weights(), model.plot()
     return model
 
 
@@ -179,7 +178,7 @@ def train_and_predict(build_new=False):
         model.compile(loss=contrastive_loss, optimizer=optimizer)
         print("Model compiled.")
     else:
-        model = load_model('my_model_dense64_sigmoid_dropout02_dense64_sigmoid.h5', custom_objects={'contrastive_loss': contrastive_loss})
+        model = load_model('my_model_dense128l1l2_sigmoid_dropout03_dense64l1l2_sigmoid.h5', custom_objects={'contrastive_loss': contrastive_loss})
         print('Model loaded.')
         
     model.fit([X_train[:,0], X_train[:,1]], y_train,
@@ -189,16 +188,24 @@ def train_and_predict(build_new=False):
               
     time.sleep(5)
     print('Saving model..')    
-    model.save('my_model_dense64_sigmoid_dropout02_dense64_sigmoid.h5')
+    model.save('my_model_dense128l1l2_sigmoid_dropout03_dense64l1l2_sigmoid.h5')
     print('Model saved.')
-    #TODO: train acc, learning curve, optimal stopping, save weights, save model HISTORY
     y_pred = model.predict([X_test[:,0], X_test[:,1]])
     return y_test, y_pred
 
+################
+np.save('y_pred_dense128l1l2_sigmoid_dropout03_dense64l1l2_sigmoid', y_pred)
+np.save('te_acc_dense128l1l2_sigmoid_dropout03_dense64l1l2_sigmoid', te_acc)
+np.save('fpr_acc_dense128l1l2_sigmoid_dropout03_dense64l1l2_sigmoid', fpr)
+np.save('tpr_acc_dense128l1l2_sigmoid_dropout03_dense64l1l2_sigmoid', tpr)
+np.save('roc_auc_acc_dense128l1l2_sigmoid_dropout03_dense64l1l2_sigmoid', roc_auc)
+
+np.shape(model.get_weights()[0])
+################
 
 def evaluate():
     # compute final accuracy on training and test sets
-    y_test, y_pred = train_and_predict()
+    #y_test, y_pred = train_and_predict()
     te_acc = compute_accuracy(y_pred, y_test)
     print('* Accuracy on test set: %0.2f%%' % (100 * te_acc))
     
@@ -208,7 +215,7 @@ def evaluate():
     ##############################################################################
     # Plot of a ROC curve for a specific class
     plt.figure()
-    plt.plot(fpr, tpr, label='ROC curve (area = %0.3f)' % roc_auc)
+    plt.plot(fpr, tpr, label='ROC curve (area = %0.4f)' % roc_auc)
     plt.plot([0, 1], [0, 1], 'k--')
     plt.xlim([0.0, 1.0])
     plt.ylim([0.0, 1.05])
