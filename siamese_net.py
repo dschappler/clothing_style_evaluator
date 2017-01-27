@@ -13,7 +13,7 @@ import pandas as pd
 import matplotlib.pyplot as plt
 from keras.models import Model, Sequential, load_model
 from keras.layers import Input, Lambda, Flatten, Dense, Dropout
-from keras.regularizers import l1l2
+from keras.regularizers import l2
 from keras import backend as K
 from keras.applications.vgg16 import VGG16, preprocess_input
 from keras.preprocessing.image import img_to_array, load_img
@@ -78,9 +78,9 @@ def create_bottleneck_network():
     
 def create_base_network():
     seq = Sequential()
-    seq.add(Dense(128, activation='sigmoid', W_regularizer=l1l2(l1=1e-6, l2=1e-6), input_dim=25088))
+    seq.add(Dense(128, activation='sigmoid', W_regularizer=l2(1e-7), input_dim=25088))
     seq.add(Dropout(0.3))
-    seq.add(Dense(64, activation='sigmoid', W_regularizer=l1l2(l1=1e-6, l2=1e-6)))
+    seq.add(Dense(64, activation='sigmoid', W_regularizer=l2(1e-7)))
     return seq
     
     
@@ -174,11 +174,11 @@ def train_and_predict(build_new=False):
     
     if build_new:
         model = siam_cnn()
-        optimizer = RMSprop(clipnorm=0.1)
+        optimizer = RMSprop() #clipnorm=0.1
         model.compile(loss=contrastive_loss, optimizer=optimizer)
         print("Model compiled.")
     else:
-        model = load_model('my_model_dense128l1l2_sigmoid_dropout03_dense64l1l2_sigmoid.h5', custom_objects={'contrastive_loss': contrastive_loss})
+        model = load_model('my_model_dense128l2_sigmoid_dropout03_dense64l2_sigmoid.h5', custom_objects={'contrastive_loss': contrastive_loss})
         print('Model loaded.')
         
     model.fit([X_train[:,0], X_train[:,1]], y_train,
@@ -188,17 +188,17 @@ def train_and_predict(build_new=False):
               
     time.sleep(5)
     print('Saving model..')    
-    model.save('my_model_dense128l1l2_sigmoid_dropout03_dense64l1l2_sigmoid.h5')
+    model.save('my_model_dense128l2_sigmoid_dropout03_dense64l2_sigmoid.h5')
     print('Model saved.')
     y_pred = model.predict([X_test[:,0], X_test[:,1]])
     return y_test, y_pred
 
 ################
-np.save('y_pred_dense128l1l2_sigmoid_dropout03_dense64l1l2_sigmoid', y_pred)
-np.save('te_acc_dense128l1l2_sigmoid_dropout03_dense64l1l2_sigmoid', te_acc)
-np.save('fpr_acc_dense128l1l2_sigmoid_dropout03_dense64l1l2_sigmoid', fpr)
-np.save('tpr_acc_dense128l1l2_sigmoid_dropout03_dense64l1l2_sigmoid', tpr)
-np.save('roc_auc_acc_dense128l1l2_sigmoid_dropout03_dense64l1l2_sigmoid', roc_auc)
+np.save('y_pred_dense128l2_sigmoid_dropout03_dense64l2_sigmoid', y_pred)
+np.save('te_acc_dense128l2_sigmoid_dropout03_dense64l2_sigmoid', te_acc)
+np.save('fpr_acc_dense128l2_sigmoid_dropout03_dense64l2_sigmoid', fpr)
+np.save('tpr_acc_dense128l2_sigmoid_dropout03_dense64l2_sigmoid', tpr)
+np.save('roc_auc_acc_dense128l2_sigmoid_dropout03_dense64l2_sigmoid', roc_auc)
 
 np.shape(model.get_weights()[0])
 ################
