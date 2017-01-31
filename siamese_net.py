@@ -193,27 +193,18 @@ def train_and_predict(build_new=False):
     y_pred = model.predict([X_test[:,0], X_test[:,1]])
     return y_test, y_pred
 
-################
-np.save('y_pred_dense128l25_sigmoid_dropout03_dense64l25_sigmoid', y_pred)
-np.save('te_acc_dense128l25_sigmoid_dropout03_dense64l25_sigmoid', te_acc)
-np.save('fpr_acc_dense128l25_sigmoid_dropout03_dense64l25_sigmoid', fpr)
-np.save('tpr_acc_dense128l25_sigmoid_dropout03_dense64l25_sigmoid', tpr)
-np.save('roc_auc_acc_dense128l25_sigmoid_dropout03_dense64l25_sigmoid', roc_auc)
-
-np.shape(model.get_weights()[0])
-################
 
 def evaluate():
     # compute final accuracy on training and test sets
-    #y_test, y_pred = train_and_predict()
+    y_test, y_pred = train_and_predict()
     te_acc = compute_accuracy(y_pred, y_test)
     print('* Accuracy on test set: %0.2f%%' % (100 * te_acc))
     
-    fpr, tpr, thresholds = roc_curve(y_test, y_pred)  #, pos_label=1
+    fpr, tpr, thresholds = roc_curve(y_test, y_pred)
     roc_auc = roc_auc_score(y_test, y_pred)
        
-    ##############################################################################
-    # Plot of a ROC curve for a specific class
+    
+    # Plot of a ROC curve
     plt.figure()
     plt.plot(fpr, tpr, label='ROC curve (area = %0.4f)' % roc_auc)
     plt.plot([0, 1], [0, 1], 'k--')
@@ -227,7 +218,6 @@ def evaluate():
     
 
 #TODO: t-sne & visualization
-
 
 if __name__=="__main__":
     evaluate()
