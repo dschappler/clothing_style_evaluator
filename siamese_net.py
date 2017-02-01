@@ -17,7 +17,7 @@ from keras.regularizers import l2
 from keras import backend as K
 from keras.applications.vgg16 import VGG16, preprocess_input
 from keras.preprocessing.image import img_to_array, load_img
-from keras.optimizers import RMSprop#, SGD, Adam
+from keras.optimizers import RMSprop
 from sklearn.metrics import roc_curve, roc_auc_score
 from sklearn.cross_validation import train_test_split
 
@@ -78,9 +78,9 @@ def create_bottleneck_network():
     
 def create_base_network():
     seq = Sequential()
-    seq.add(Dense(128, activation='sigmoid', W_regularizer=l2(5e-7), input_dim=25088))
+    seq.add(Dense(128, activation='sigmoid', W_regularizer=l2(1e-7), input_dim=25088))
     seq.add(Dropout(0.3))
-    seq.add(Dense(64, activation='sigmoid', W_regularizer=l2(5e-7)))
+    seq.add(Dense(64, activation='sigmoid', W_regularizer=l2(1e-7)))
     return seq
     
     
