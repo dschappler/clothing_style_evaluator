@@ -38,7 +38,7 @@ def contrastive_loss(y_true, y_pred):
     http://yann.lecun.com/exdb/publis/pdf/hadsell-chopra-lecun-06.pdf
     '''
     margin = 1
-    return K.mean((1 - y_true) * K.square(y_pred) + y_true * K.square(K.maximum(margin - y_pred, 0)))
+    return K.mean(y_true * K.square(y_pred) + (1 - y_true) * K.square(K.maximum(margin - y_pred, 0)))
 
 
 def load_and_preprocess(URL):
@@ -79,7 +79,7 @@ def create_bottleneck_network():
     
 def create_base_network():
     seq = Sequential()
-    seq.add(Dense(128, activation='sigmoid',  input_dim=25088)) #W_regularizer=l2(1e-7),
+    seq.add(Dense(128, activation='sigmoid', input_dim=25088)) #W_regularizer=l2(1e-7),
     seq.add(Dropout(0.3))
     seq.add(Dense(64, activation='sigmoid')) #, W_regularizer=l2(1e-7)
     return seq
@@ -139,12 +139,12 @@ def bottleneck_features(save=False, generate=False):
         np.save('y_test', y_test)
     
     print('Loading data..')    
-    X_train = np.load('X_train.npy')     
-    X_val = np.load('X_val.npy')
-    X_test = np.load('X_test.npy')
-    y_train = np.load('y_train.npy')
-    y_val = np.load('y_val.npy')
-    y_test = np.load('y_test.npy')
+    X_train = np.load('split_data/X_train.npy')     
+    X_val = np.load('split_data/X_val.npy')
+    X_test = np.load('split_data/X_test.npy')
+    y_train = np.load('split_data/y_train.npy')
+    y_val = np.load('split_data/y_val.npy')
+    y_test = np.load('split_data/y_test.npy')
     print('Data loaded.')
     return X_train, X_val, X_test, y_train, y_val, y_test
 
@@ -152,8 +152,7 @@ def bottleneck_features(save=False, generate=False):
 def compute_accuracy(predictions, labels):
     '''Compute classification accuracy with a fixed threshold on distances.
     '''
-    return np.mean(labels == (predictions.ravel() >= 0.5))
-   
+    return labels[predictions.ravel() < 0.5].mean()
    
 def siam_cnn():
     base_network = create_base_network()
@@ -189,7 +188,7 @@ def train_and_predict(build_new=False):
               
     time.sleep(5)
     print('Saving model..')    
-    model.save('my_model_dense128l25_sigmoid_dropout03_dense64l25_sigmoid.h5')
+    model.save('models/model8.h5')
     print('Model saved.')
     y_pred = model.predict([X_test[:,0], X_test[:,1]])
     return y_test, y_pred
@@ -271,13 +270,13 @@ def distplots():
     trained_pred_neg = trained_model.predict([neg_pairs[:,0], neg_pairs[:,1]])
     
     plt.figure(figsize=(9,9))
-    sns.kdeplot(untrained_pred_neg[:,0], shade=True)
-    sns.kdeplot(untrained_pred_pos[:,0], shade=True)
+    sns.kdeplot(untrained_pred_neg[:,0], shade=True, color='red')
+    sns.kdeplot(untrained_pred_pos[:,0], shade=True, color='green')
     plt.show()
       
     plt.figure(figsize=(9,9))
-    sns.kdeplot(trained_pred_neg[:,0], shade=True)
-    sns.kdeplot(trained_pred_pos[:,0], shade=True)
+    sns.kdeplot(trained_pred_neg[:,0], shade=True, color='red')
+    sns.kdeplot(trained_pred_pos[:,0], shade=True, color='green')
     plt.show()
 
 
