@@ -78,9 +78,9 @@ def create_bottleneck_network():
     
 def create_base_network():
     seq = Sequential()
-    seq.add(Dense(128, activation='sigmoid', W_regularizer=l2(1e-7), input_dim=25088))
+    seq.add(Dense(128, activation='sigmoid',  input_dim=25088)) #W_regularizer=l2(1e-7),
     seq.add(Dropout(0.3))
-    seq.add(Dense(64, activation='sigmoid', W_regularizer=l2(1e-7)))
+    seq.add(Dense(64, activation='sigmoid')) #, W_regularizer=l2(1e-7)
     return seq
     
     
@@ -102,13 +102,13 @@ def bottleneck_features(save=False, generate=False):
             pbar.update(i)
         pbar.finish()
         print('Finished. Saving features...')
-        np.save('bottleneck_pairs', np.asarray(pairs))
-        np.save('bottleneck_labels', np.asarray(data['score']))
+        np.save('bottleneck_data/bottleneck_pairs', np.asarray(pairs))
+        np.save('bottleneck_data/bottleneck_labels', np.asarray(data['score']))
         print('Features saved.')
     
     if generate:
         print("Loading pairs..")
-        pairdata = np.load('bottleneck_pairs.npy')
+        pairdata = np.load('bottleneck_data/bottleneck_pairs.npy')
         max_value = np.max(pairdata)
         pairdata /= max_value #(pairdata - np.min(pairdata)) / (np.max(pairdata) - np.min(pairdata))
         time.sleep(3)    
@@ -178,7 +178,7 @@ def train_and_predict(build_new=False):
         model.compile(loss=contrastive_loss, optimizer=optimizer)
         print("Model compiled.")
     else:
-        model = load_model('my_model_dense128l25_sigmoid_dropout03_dense64l25_sigmoid.h5', custom_objects={'contrastive_loss': contrastive_loss})
+        model = load_model('models/model7.h5', custom_objects={'contrastive_loss': contrastive_loss})
         print('Model loaded.')
         
     model.fit([X_train[:,0], X_train[:,1]], y_train,
@@ -202,11 +202,46 @@ def evaluate():
     
     fpr, tpr, thresholds = roc_curve(y_test, y_pred)
     roc_auc = roc_auc_score(y_test, y_pred)
-       
+     ########
+    fpr1=np.load('performance_data/fpr_model1.npy')
+    tpr1=np.load('performance_data/tpr_model1.npy')
+    roc_auc1=np.load('performance_data/roc_auc_model1.npy')
+    
+    fpr2=np.load('performance_data/fpr_model2.npy')
+    tpr2=np.load('performance_data/tpr_model2.npy')
+    roc_auc2=np.load('performance_data/roc_auc_model2.npy')
+    
+    fpr3=np.load('performance_data/fpr_model3.npy')
+    tpr3=np.load('performance_data/tpr_model3.npy')
+    roc_auc3=np.load('performance_data/roc_auc_model3.npy')
+    
+    fpr4=np.load('performance_data/fpr_model4.npy')
+    tpr4=np.load('performance_data/tpr_model4.npy')
+    roc_auc4=np.load('performance_data/roc_auc_model4.npy')
+        
+    fpr5=np.load('performance_data/fpr_model5.npy')
+    tpr5=np.load('performance_data/tpr_model5.npy')
+    roc_auc5=np.load('performance_data/roc_auc_model5.npy')
+    
+    fpr6=np.load('performance_data/fpr_model6.npy')
+    tpr6=np.load('performance_data/tpr_model6.npy')
+    roc_auc6=np.load('performance_data/roc_auc_model6.npy')
+    
+    fpr7=np.load('performance_data/fpr_model7.npy')
+    tpr7=np.load('performance_data/tpr_model7.npy')
+    roc_auc7=np.load('performance_data/roc_auc_model7.npy')
+        
+        
     
     # Plot of a ROC curve
-    plt.figure()
-    plt.plot(fpr, tpr, label='ROC curve (area = %0.4f)' % roc_auc)
+    plt.figure(figsize=(9,9))
+    #plt.plot(fpr1, tpr1, color='green', label='Model 1 (area = %0.3f)' % roc_auc1)
+    plt.plot(fpr2, tpr2, color='blue', label='Model 2 (area = %0.3f)' % roc_auc2)
+    plt.plot(fpr3, tpr3, color='red', label='Model 3 (area = %0.3f)' % roc_auc3)
+    #plt.plot(fpr4, tpr4, color='black', label='ROC curve (area = %0.3f)' % roc_auc4)
+    plt.plot(fpr5, tpr5, color='grey', label='Model 5 (area = %0.3f)' % roc_auc5)
+    plt.plot(fpr6, tpr6, color='green', label='Model 6 (area = %0.3f)' % roc_auc6)
+    plt.plot(fpr7, tpr7, color='black', label='Model 7 (area = %0.3f)' % roc_auc7)
     plt.plot([0, 1], [0, 1], 'k--')
     plt.xlim([0.0, 1.0])
     plt.ylim([0.0, 1.05])
@@ -216,6 +251,21 @@ def evaluate():
     plt.legend(loc="lower right")
     plt.show()
     
+#####DISTPLOTS###
+#labels = np.load('bottleneck_data/bottleneck_labels.npy')
+#pos_pairs = pairdata[labels==1]
+#neg_pairs = pairdata[labels==0]
+#np.save('pos_pairs', pos_pairs)
+#np.save('neg_pairs', neg_pairs)
+pos_pairs = np.load('pos_pairs.npy')
+neg_pairs = np.load('neg_pairs.npy')
+
+untrained_model = siam_cnn()
+untrained_pred_pos = untrained_model.predict([pos_pairs[:,0], pos_pairs[:,1]])
+trained_model = load_model('models/model7.h5', custom_objects={'contrastive_loss': contrastive_loss})
+trained_pred_pos = trained_model.predict([pos_pairs[:,0], pos_pairs[:,1]])
+
+import seaborn as sns
 
 #TODO: t-sne & visualization
 
