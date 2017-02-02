@@ -11,6 +11,7 @@ import progressbar as pb
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
+import seaborn as sns
 from keras.models import Model, Sequential, load_model
 from keras.layers import Input, Lambda, Flatten, Dense, Dropout
 from keras.regularizers import l2
@@ -251,21 +252,34 @@ def evaluate():
     plt.legend(loc="lower right")
     plt.show()
     
-#####DISTPLOTS###
-#labels = np.load('bottleneck_data/bottleneck_labels.npy')
-#pos_pairs = pairdata[labels==1]
-#neg_pairs = pairdata[labels==0]
-#np.save('pos_pairs', pos_pairs)
-#np.save('neg_pairs', neg_pairs)
-pos_pairs = np.load('pos_pairs.npy')
-neg_pairs = np.load('neg_pairs.npy')
 
-untrained_model = siam_cnn()
-untrained_pred_pos = untrained_model.predict([pos_pairs[:,0], pos_pairs[:,1]])
-trained_model = load_model('models/model7.h5', custom_objects={'contrastive_loss': contrastive_loss})
-trained_pred_pos = trained_model.predict([pos_pairs[:,0], pos_pairs[:,1]])
+def distplots():
+    #labels = np.load('bottleneck_data/bottleneck_labels.npy')
+    #pos_pairs = pairdata[labels==1]
+    #neg_pairs = pairdata[labels==0]
+    #np.save('pos_pairs', pos_pairs)
+    #np.save('neg_pairs', neg_pairs)
+    pos_pairs = np.load('pos_pairs.npy')
+    neg_pairs = np.load('neg_pairs.npy')
+    
+    untrained_model = siam_cnn()
+    trained_model = load_model('models/model7.h5', custom_objects={'contrastive_loss': contrastive_loss})
+    
+    untrained_pred_pos = untrained_model.predict([pos_pairs[:,0], pos_pairs[:,1]])
+    untrained_pred_neg = untrained_model.predict([neg_pairs[:,0], neg_pairs[:,1]])
+    trained_pred_pos = trained_model.predict([pos_pairs[:,0], pos_pairs[:,1]])
+    trained_pred_neg = trained_model.predict([neg_pairs[:,0], neg_pairs[:,1]])
+    
+    plt.figure(figsize=(9,9))
+    sns.kdeplot(untrained_pred_neg[:,0], shade=True)
+    sns.kdeplot(untrained_pred_pos[:,0], shade=True)
+    plt.show()
+      
+    plt.figure(figsize=(9,9))
+    sns.kdeplot(trained_pred_neg[:,0], shade=True)
+    sns.kdeplot(trained_pred_pos[:,0], shade=True)
+    plt.show()
 
-import seaborn as sns
 
 #TODO: t-sne & visualization
 
