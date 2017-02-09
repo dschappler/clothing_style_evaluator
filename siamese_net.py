@@ -79,7 +79,7 @@ def create_bottleneck_network():
     
 def create_base_network():
     seq = Sequential()
-    seq.add(Dense(64, activation='relu', W_regularizer=l2(1e-5), input_dim=25088)) #
+    seq.add(Dense(128, activation='relu', W_regularizer=l2(2e-4), input_dim=25088)) #
     #seq.add(Dropout(0.2))
     #seq.add(Dense(128, activation='relu')) #, W_regularizer=l2(1e-4)
     #seq.add(Dropout(0.2))    
@@ -180,7 +180,7 @@ def train_and_predict(build_new=False):
         model.compile(loss=contrastive_loss, optimizer=optimizer)
         print("Model compiled.")
     else:
-        model = load_model('models/model14.h5', custom_objects={'contrastive_loss': contrastive_loss})
+        model = load_model('models/model17.h5', custom_objects={'contrastive_loss': contrastive_loss})
         print('Model loaded.')
         
     model.fit([X_train[:,0], X_train[:,1]], y_train,
@@ -190,7 +190,7 @@ def train_and_predict(build_new=False):
               
     time.sleep(5)
     print('Saving model..')    
-    model.save('models/model14.h5')
+    model.save('models/model17.h5')
     print('Model saved.')
     y_pred = model.predict([X_test[:,0], X_test[:,1]])
     return y_test, y_pred
@@ -205,10 +205,10 @@ def evaluate():
     fpr, tpr, thresholds = roc_curve(y_test, y_pred)
     roc_auc = roc_auc_score(y_test, y_pred)
      ########
-    np.save('performance_data/fpr_model14.npy', fpr)
-    np.save('performance_data/tpr_model14.npy', tpr)
-    np.save('performance_data/roc_auc_model14.npy', roc_auc)
-    np.save('performance_data/y_pred_model14.npy', y_pred)
+    np.save('performance_data/fpr_model17.npy', fpr)
+    np.save('performance_data/tpr_model17.npy', tpr)
+    np.save('performance_data/roc_auc_model17.npy', roc_auc)
+    np.save('performance_data/y_pred_model17.npy', y_pred)
     
     
     #########
