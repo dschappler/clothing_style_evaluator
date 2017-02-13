@@ -79,7 +79,7 @@ def create_bottleneck_network():
     
 def create_base_network():
     seq = Sequential()
-    seq.add(Dense(128, activation='relu', W_regularizer=l2(2e-4), input_dim=25088)) #
+    seq.add(Dense(128, activation='relu', W_regularizer=l2(1.25e-4), input_dim=25088)) #
     #seq.add(Dropout(0.2))
     #seq.add(Dense(128, activation='relu')) #, W_regularizer=l2(1e-4)
     #seq.add(Dropout(0.2))    
@@ -180,7 +180,7 @@ def train_and_predict(build_new=False):
         model.compile(loss=contrastive_loss, optimizer=optimizer)
         print("Model compiled.")
     else:
-        model = load_model('models/model17.h5', custom_objects={'contrastive_loss': contrastive_loss})
+        model = load_model('models/model19.h5', custom_objects={'contrastive_loss': contrastive_loss})
         print('Model loaded.')
         
     model.fit([X_train[:,0], X_train[:,1]], y_train,
@@ -190,7 +190,7 @@ def train_and_predict(build_new=False):
               
     time.sleep(5)
     print('Saving model..')    
-    model.save('models/model17.h5')
+    model.save('models/model19.h5')
     print('Model saved.')
     y_pred = model.predict([X_test[:,0], X_test[:,1]])
     return y_test, y_pred
@@ -205,10 +205,10 @@ def evaluate():
     fpr, tpr, thresholds = roc_curve(y_test, y_pred)
     roc_auc = roc_auc_score(y_test, y_pred)
      ########
-    np.save('performance_data/fpr_model17.npy', fpr)
-    np.save('performance_data/tpr_model17.npy', tpr)
-    np.save('performance_data/roc_auc_model17.npy', roc_auc)
-    np.save('performance_data/y_pred_model17.npy', y_pred)
+    np.save('performance_data/fpr_model19.npy', fpr)
+    np.save('performance_data/tpr_model19.npy', tpr)
+    np.save('performance_data/roc_auc_model19.npy', roc_auc)
+    np.save('performance_data/y_pred_model19.npy', y_pred)
     
     
     #########
@@ -271,21 +271,29 @@ def distplots():
     neg_pairs = np.load('neg_pairs.npy')
     
     untrained_model = siam_cnn()
-    trained_model = load_model('models/model7.h5', custom_objects={'contrastive_loss': contrastive_loss})
+    trained_model = load_model('models/model19.h5', custom_objects={'contrastive_loss': contrastive_loss})
     
     untrained_pred_pos = untrained_model.predict([pos_pairs[:,0], pos_pairs[:,1]])
     untrained_pred_neg = untrained_model.predict([neg_pairs[:,0], neg_pairs[:,1]])
     trained_pred_pos = trained_model.predict([pos_pairs[:,0], pos_pairs[:,1]])
     trained_pred_neg = trained_model.predict([neg_pairs[:,0], neg_pairs[:,1]])
     
-    plt.figure(figsize=(9,9))
-    sns.kdeplot(untrained_pred_neg[:,0], shade=True, color='red')
-    sns.kdeplot(untrained_pred_pos[:,0], shade=True, color='green')
-    plt.show()
-      
-    plt.figure(figsize=(9,9))
-    sns.kdeplot(trained_pred_neg[:,0], shade=True, color='red')
-    sns.kdeplot(trained_pred_pos[:,0], shade=True, color='green')
+    plt.figure(figsize=(4,4))
+    plt.xlabel('Distance')
+    plt.ylabel('Frequency')  
+    sns.kdeplot(untrained_pred_neg[:,0], shade=True, color='red', label='Distant pairs')
+    sns.kdeplot(untrained_pred_pos[:,0], shade=True, color='green', label='Close pairs')
+    plt.legend(loc=1)
+    plt.savefig('semitrained_pred.png')
+    plt.show()    
+    
+    plt.figure(figsize=(4,4))   
+    plt.xlabel('Distance')
+    plt.ylabel('Frequency')
+    sns.kdeplot(trained_pred_neg[:,0], shade=True, color='red', label='Distant pairs')
+    sns.kdeplot(trained_pred_pos[:,0], shade=True, color='green', label='Close pairs')
+    plt.legend(loc=1)
+    plt.savefig('trained_pred.png')    
     plt.show()
 
 
