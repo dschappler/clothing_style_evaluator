@@ -13,7 +13,7 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import seaborn as sns
 from keras.models import Model, Sequential, load_model
-from keras.layers import Input, Lambda, Flatten, Dense, Dropout
+from keras.layers import Input, Lambda, Flatten, Dense
 from keras.regularizers import l2
 from keras import backend as K
 from keras.applications.vgg16 import VGG16, preprocess_input
@@ -180,7 +180,7 @@ def train_and_predict(build_new=False):
         model.compile(loss=contrastive_loss, optimizer=optimizer)
         print("Model compiled.")
     else:
-        model = load_model('models/model19.h5', custom_objects={'contrastive_loss': contrastive_loss})
+        model = load_model('models/modelxx.h5', custom_objects={'contrastive_loss': contrastive_loss})
         print('Model loaded.')
         
     model.fit([X_train[:,0], X_train[:,1]], y_train,
@@ -190,7 +190,7 @@ def train_and_predict(build_new=False):
               
     time.sleep(5)
     print('Saving model..')    
-    model.save('models/model19.h5')
+    model.save('models/modelxx.h5')
     print('Model saved.')
     y_pred = model.predict([X_test[:,0], X_test[:,1]])
     return y_test, y_pred
@@ -202,62 +202,36 @@ def evaluate():
     te_acc = compute_accuracy(y_pred, y_test)
     print('* Accuracy on test set: %0.2f%%' % (100 * te_acc))
     
+    y_pred = 1 - y_pred 
     fpr, tpr, thresholds = roc_curve(y_test, y_pred)
     roc_auc = roc_auc_score(y_test, y_pred)
      ########
-    np.save('performance_data/fpr_model19.npy', fpr)
-    np.save('performance_data/tpr_model19.npy', tpr)
-    np.save('performance_data/roc_auc_model19.npy', roc_auc)
-    np.save('performance_data/y_pred_model19.npy', y_pred)
-    
-    
-    #########
-    fpr1=np.load('performance_data/fpr_model1.npy')
-    tpr1=np.load('performance_data/tpr_model1.npy')
-    roc_auc1=np.load('performance_data/roc_auc_model1.npy')
-    
-    fpr2=np.load('performance_data/fpr_model2.npy')
-    tpr2=np.load('performance_data/tpr_model2.npy')
-    roc_auc2=np.load('performance_data/roc_auc_model2.npy')
-    
-    fpr3=np.load('performance_data/fpr_model3.npy')
-    tpr3=np.load('performance_data/tpr_model3.npy')
-    roc_auc3=np.load('performance_data/roc_auc_model3.npy')
+    np.save('performance_data/fpr_model9.npy', fpr)
+    np.save('performance_data/tpr_model9.npy', tpr)
+    np.save('performance_data/roc_auc_model9.npy', roc_auc)
+    np.save('performance_data/y_pred_model9.npy', y_pred)
     
     fpr4=np.load('performance_data/fpr_model4.npy')
     tpr4=np.load('performance_data/tpr_model4.npy')
     roc_auc4=np.load('performance_data/roc_auc_model4.npy')
-        
-    fpr5=np.load('performance_data/fpr_model5.npy')
-    tpr5=np.load('performance_data/tpr_model5.npy')
-    roc_auc5=np.load('performance_data/roc_auc_model5.npy')
-    
-    fpr6=np.load('performance_data/fpr_model6.npy')
-    tpr6=np.load('performance_data/tpr_model6.npy')
-    roc_auc6=np.load('performance_data/roc_auc_model6.npy')
-    
-    fpr7=np.load('performance_data/fpr_model7.npy')
-    tpr7=np.load('performance_data/tpr_model7.npy')
-    roc_auc7=np.load('performance_data/roc_auc_model7.npy')
-        
-        
+
+    fpr9=np.load('performance_data/fpr_model9.npy')
+    tpr9=np.load('performance_data/tpr_model9.npy')
+    roc_auc9=np.load('performance_data/roc_auc_model9.npy')        
     
     # Plot of a ROC curve
-    plt.figure(figsize=(9,9))
-    #plt.plot(fpr1, tpr1, color='green', label='Model 1 (area = %0.3f)' % roc_auc1)
-    plt.plot(fpr2, tpr2, color='blue', label='Model 2 (area = %0.3f)' % roc_auc2)
-    plt.plot(fpr3, tpr3, color='red', label='Model 3 (area = %0.3f)' % roc_auc3)
-    #plt.plot(fpr4, tpr4, color='black', label='ROC curve (area = %0.3f)' % roc_auc4)
-    plt.plot(fpr5, tpr5, color='grey', label='Model 5 (area = %0.3f)' % roc_auc5)
-    plt.plot(fpr6, tpr6, color='green', label='Model 6 (area = %0.3f)' % roc_auc6)
-    plt.plot(fpr7, tpr7, color='black', label='Model 7 (area = %0.3f)' % roc_auc7)
+    plt.figure(figsize=(5,5))
+    plt.plot(fpr4, tpr4, label='Model 4 (area = %0.3f)' % roc_auc4)
+    plt.plot(fpr9, tpr9, label='Model 9 (area = %0.3f)' % roc_auc9)
     plt.plot([0, 1], [0, 1], 'k--')
-    plt.xlim([0.0, 1.0])
-    plt.ylim([0.0, 1.05])
+    plt.xlim([-0.01, 1.0])
+    plt.ylim([0.0, 1.01])
+    plt.grid()
     plt.xlabel('False Positive Rate')
     plt.ylabel('True Positive Rate')
     plt.title('Receiver operating characteristic')
     plt.legend(loc="lower right")
+    plt.savefig('performance_data/ROC.png')
     plt.show()
     
 
@@ -271,7 +245,7 @@ def distplots():
     neg_pairs = np.load('neg_pairs.npy')
     
     untrained_model = siam_cnn()
-    trained_model = load_model('models/model19.h5', custom_objects={'contrastive_loss': contrastive_loss})
+    trained_model = load_model('models/model9.h5', custom_objects={'contrastive_loss': contrastive_loss})
     
     untrained_pred_pos = untrained_model.predict([pos_pairs[:,0], pos_pairs[:,1]])
     untrained_pred_neg = untrained_model.predict([neg_pairs[:,0], neg_pairs[:,1]])
