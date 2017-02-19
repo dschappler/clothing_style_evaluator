@@ -1,8 +1,3 @@
-'''Train a Siamese MLP on pairs of digits from the MNIST dataset.
-It follows Hadsell-et-al.'06 [1] by computing the Euclidean distance on the
-output of the shared network and by optimizing the contrastive loss (see paper
-for mode details).
-'''
 from __future__ import absolute_import
 from __future__ import print_function
 import time
@@ -79,11 +74,7 @@ def create_bottleneck_network():
     
 def create_base_network():
     seq = Sequential()
-    seq.add(Dense(128, activation='relu', W_regularizer=l2(1.25e-4), input_dim=25088)) #
-    #seq.add(Dropout(0.2))
-    #seq.add(Dense(128, activation='relu')) #, W_regularizer=l2(1e-4)
-    #seq.add(Dropout(0.2))    
-    #seq.add(Dense(128, activation='relu'))
+    seq.add(Dense(128, activation='relu', W_regularizer=l2(1.25e-4), input_dim=25088)) 
     return seq
     
     
