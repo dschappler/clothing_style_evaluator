@@ -1,13 +1,7 @@
-from tsne import bh_sne
 import numpy as np
 from skimage.transform import resize
 
 from matplotlib import pyplot as plt
-
-def gray_to_color(img):
-    if len(img.shape) == 2:
-        img = np.dstack((img, img, img))
-    return img
 
 def min_resize(img, size):
     """
@@ -21,7 +15,7 @@ def min_resize(img, size):
             img = resize(img, (int(size), int(round((w/h)*size))))
     return img
 
-def image_scatter(features, images, img_res, res=4000, cval=1.):
+def image_scatter(features, images, img_res=150, res=10000, cval=1.):
     """
     Embeds images via tsne into a scatter plot.
 
@@ -47,13 +41,12 @@ def image_scatter(features, images, img_res, res=4000, cval=1.):
     canvas: numpy array
         Image of visualization
     """
-    features = np.copy(features).astype('float64')
-    images = [gray_to_color(image) for image in images]
+    images = np.load('tsne_images.npy')
     images = [min_resize(image, img_res) for image in images]
     max_width = max([image.shape[0] for image in images])
     max_height = max([image.shape[1] for image in images])
 
-    f2d = bh_sne(features)
+    f2d = np.load('tsne_transformed.npy')
 
     xx = f2d[:, 0]
     yy = f2d[:, 1]
@@ -78,3 +71,8 @@ def image_scatter(features, images, img_res, res=4000, cval=1.):
         y_idx = np.argmin((y - y_coords)**2)
         canvas[x_idx:x_idx+w, y_idx:y_idx+h] = image
     return canvas
+    
+plt.figure(figsize=(100,100))
+plt.imshow(canvas)
+plt.savefig('tsne6.png')
+plt.show()

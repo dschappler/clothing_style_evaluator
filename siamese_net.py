@@ -80,7 +80,7 @@ def create_base_network():
     
 def bottleneck_features(save=False, generate=False):
     if save:
-        data = load_images('train.csv')    
+        data = load_images('data_mini.csv')    
         print('Images loaded.')    
         model = create_bottleneck_network()
         print('Model loaded.')
