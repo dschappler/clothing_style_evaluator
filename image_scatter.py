@@ -72,7 +72,7 @@ def image_scatter(features, images, img_res=150, res=10000, cval=1.):
         canvas[x_idx:x_idx+w, y_idx:y_idx+h] = image
     return canvas
     
-plt.figure(figsize=(100,100))
+plt.figure(figsize=(90,90))
 plt.imshow(canvas)
-plt.savefig('tsne6.png')
+plt.savefig('tsne11.png')
 plt.show()

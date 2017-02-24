@@ -23,7 +23,7 @@ def load_data(pairdata=False):
         time.sleep(3)
         max_value = np.max(pairdata)
         pairdata /= max_value
-        imgstream = pairdata[:500,0]
+        imgstream = pairdata[:1000,0]
         np.save('imgstream', imgstream)
     else:               
         imgstream = np.load('imgstream.npy')
@@ -40,7 +40,7 @@ top_model.layers[0].set_weights(weights_layer)
 
 ######################################
 
-data = pd.read_csv('data.csv', sep=";")['pic1'][:500]
+data = pd.read_csv('data.csv', sep=";")['pic1'][:1000]
 root_url = 'http://ecx.images-amazon.com/images/I/'
 for i in range(len(data)): 
     data[i] = root_url + data[i]
