@@ -211,9 +211,9 @@ def evaluate():
     roc_auc9=np.load('performance_data/roc_auc_model9.npy')        
     
     # Plot of a ROC curve
-    plt.figure(figsize=(5,5))
-    plt.plot(fpr4, tpr4, label='Model 4 (area = %0.3f)' % roc_auc4)
-    plt.plot(fpr9, tpr9, label='Model 9 (area = %0.3f)' % roc_auc9)
+    plt.figure(figsize=(6,6))
+    plt.plot(fpr4, tpr4, label='Model I (area = %0.3f)' % roc_auc4)
+    plt.plot(fpr9, tpr9, label='Model V (area = %0.3f)' % roc_auc9)
     plt.plot([0, 1], [0, 1], 'k--')
     plt.xlim([-0.01, 1.0])
     plt.ylim([0.0, 1.01])
@@ -261,8 +261,6 @@ def distplots():
     plt.savefig('trained_pred.png')    
     plt.show()
 
-
-#TODO: t-sne & visualization
 
 if __name__=="__main__":
     evaluate()
