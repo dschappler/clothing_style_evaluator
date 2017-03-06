@@ -90,8 +90,7 @@ def feature_scaling(data):
 
 def create_pairdata():
     pairdata = []
-    data = load_and_preprocess('data_mini.csv')
-    data = feature_scaling(data)   
+    data = load_and_preprocess('data_mini.csv') 
     for i in range(len(data)):
         pic_1 = data['pic1'][i][0]
         pic_2 = data['pic2'][i][0]
@@ -142,6 +141,9 @@ def train_and_predict(build_new=True):
     
     X_train, X_val, X_test, y_train, y_val, y_test = split_pairdata()
     
+    pos_pairs = np.concatenate((X_train[y_train==1], X_val[y_val==1], X_test[y_test==1]))
+    neg_pairs = np.concatenate((X_train[y_train==0], X_val[y_val==0], X_test[y_test==0]))
+    
     if build_new:
         model = siam_cnn()
         optimizer = RMSprop()
@@ -150,6 +152,18 @@ def train_and_predict(build_new=True):
     else:
         model = load_model('models/modelxx.h5', custom_objects={'contrastive_loss': contrastive_loss})
         print('Model loaded.')
+        
+    untrained_pred_pos = model.predict([pos_pairs[:,0], pos_pairs[:,1]])
+    untrained_pred_neg = model.predict([neg_pairs[:,0], neg_pairs[:,1]])
+    
+    plt.figure(figsize=(4,4))
+    plt.xlabel('Distance')
+    plt.ylabel('Frequency')  
+    sns.kdeplot(untrained_pred_neg[:,0], shade=True, color='red', label='Distant pairs')
+    sns.kdeplot(untrained_pred_pos[:,0], shade=True, color='green', label='Close pairs')
+    plt.legend(loc=1)
+    #plt.savefig('untrained_pred.png')
+    plt.show()
         
     model.fit([X_train[:,0], X_train[:,1]], y_train,
               validation_data = ([X_val[:,0], X_val[:,1]], y_val),
@@ -160,6 +174,19 @@ def train_and_predict(build_new=True):
     print('Saving model..')    
     #model.save('models/modelxx.h5')
     print('Model saved.')
+    
+    trained_pred_pos = model.predict([pos_pairs[:,0], pos_pairs[:,1]])
+    trained_pred_neg = model.predict([neg_pairs[:,0], neg_pairs[:,1]])
+    
+    plt.figure(figsize=(4,4))   
+    plt.xlabel('Distance')
+    plt.ylabel('Frequency')
+    sns.kdeplot(trained_pred_neg[:,0], shade=True, color='red', label='Distant pairs')
+    sns.kdeplot(trained_pred_pos[:,0], shade=True, color='green', label='Close pairs')
+    plt.legend(loc=1)
+    #plt.savefig('trained_pred.png')    
+    plt.show()
+   
     y_pred = model.predict([X_test[:,0], X_test[:,1]])
     return y_test, y_pred
     
