@@ -1,9 +1,3 @@
-# -*- coding: utf-8 -*-
-"""
-Created on Thu Mar 02 12:15:08 2017
-
-@author: dschappler
-"""
 from __future__ import absolute_import
 from __future__ import print_function
 import sys
@@ -16,28 +10,28 @@ from keras.applications.vgg16 import preprocess_input, VGG16
 from keras.models import Sequential, load_model
 from keras.layers import Input, Flatten
 
-model = load_model('models/model9.h5', custom_objects={'contrastive_loss': contrastive_loss})
-max_value = np.load('max_value.npy')
+model = load_model('models/best_model.h5', custom_objects={'contrastive_loss': contrastive_loss})
+max_value = np.load('data/max_value.npy')
 
 def local_or_url():
-    mode = raw_input('local or url? : ')
+    mode = raw_input('Do you want to use a local image or an image-URL? Enter "local" for a local image or "url" for an image-URL: ')
     if mode == 'local':
-        path = raw_input('enter local image path: ')
+        path = raw_input('Please enter the local image path: ')
         try:
             img = load_img(path, target_size=(224, 224))
         except:
-            print('not a valid image path or image file.')
+            print('This is not a valid image path or image file.')
             sys.exit(1)
 
     if mode == 'url':
-        url = raw_input('enter image url: ')
+        url = raw_input('Please enter the image-URL: ')
         try:
             img = cStringIO.StringIO(urllib.urlopen(url).read())
             img = load_img(img, target_size=(224, 224))
         except:
-            print('not a valid url or image.')
+            print('This is not a valid url or image.')
             sys.exit(1)
-    
+    print('Loading your image...')
     img = img_to_array(img)
     img = np.expand_dims(img, axis=0)
     img = preprocess_input(img)
@@ -55,19 +49,23 @@ def push_through_vgg():
     
     
 def evaluate_outfit():
+    print('Image 1 of 2:')
     img_1 = push_through_vgg() / max_value
-    time.sleep(3)
+    time.sleep(1)
+    print('Image 2 of 2:')
     img_2 = push_through_vgg() / max_value
-    time.sleep(3)
+    time.sleep(1)
+    print('Calculating the score...')
     pred = model.predict([img_1, img_2])
     
-    print('This outfit gets a score of {:1.2f}'.format(float(pred)))
+    print('This outfit gets a score of {:1.2f}.'.format(float(pred)))
+    print('Your result:')
     if float(pred)<.6:
         print('Nice, this looks good together!')
     elif .6 <= float(pred) <= .75:
         print('Hmm.. not sure..')
     else:
-        print('Sorry, you better not wear this together.')
+        print('Sorry, these styles do not match.')
 
 
 if __name__=="__main__":
