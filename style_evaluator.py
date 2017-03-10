@@ -48,7 +48,7 @@ def push_through_vgg():
     return pred_img
     
     
-def evaluate_outfit():
+def evaluate():
     print('Image 1 of 2:')
     img_1 = push_through_vgg() / max_value
     time.sleep(1)
@@ -69,4 +69,4 @@ def evaluate_outfit():
 
 
 if __name__=="__main__":
-    evaluate_outfit()
+    evaluate()
