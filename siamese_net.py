@@ -90,7 +90,7 @@ def feature_scaling(data):
 
 def create_pairdata():
     pairdata = []
-    data = load_and_preprocess('data_mini.csv') 
+    data = load_and_preprocess('data/data_mini.csv') 
     for i in range(len(data)):
         pic_1 = data['pic1'][i][0]
         pic_2 = data['pic2'][i][0]
@@ -172,7 +172,7 @@ def train_and_predict(build_new=True):
               
     time.sleep(5)
     print('Saving model..')    
-    #model.save('models/modelxx.h5')
+    #model.save('models/best_model.h5')
     print('Model saved.')
     
     trained_pred_pos = model.predict([pos_pairs[:,0], pos_pairs[:,1]])
@@ -191,7 +191,7 @@ def train_and_predict(build_new=True):
     return y_test, y_pred
     
 
-def evaluate():
+def evaluate_model():
     # compute final accuracy on training and test sets
     y_test, y_pred = train_and_predict()
     te_acc = compute_accuracy(y_pred, y_test)
@@ -217,4 +217,4 @@ def evaluate():
     
 
 if __name__ == '__main__':
-    evaluate()
+    evaluate_model()
