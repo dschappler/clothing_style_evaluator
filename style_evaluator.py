@@ -60,10 +60,8 @@ def evaluate():
     
     print('This outfit gets a score of {:1.2f}.'.format(float(pred)))
     print('Your result:')
-    if float(pred)<.6:
+    if float(pred)<=.82:
         print('Nice, this looks good together!')
-    elif .6 <= float(pred) <= .75:
-        print('Hmm.. not sure..')
     else:
         print('Sorry, these styles do not match.')
 
