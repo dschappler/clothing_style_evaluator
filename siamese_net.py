@@ -173,6 +173,7 @@ def train_and_predict(csv_file, build_new=True):
     untrained_pred_neg = model.predict([neg_pairs[:,0], neg_pairs[:,1]])
     
     #Density plot of distances before training
+    print('Plotting density of distances.. (please exit plot window to continue.)')    
     plt.figure(figsize=(4,4))
     plt.xlabel('Distance')
     plt.ylabel('Frequency')  
@@ -182,20 +183,23 @@ def train_and_predict(csv_file, build_new=True):
     #plt.savefig('untrained_pred.png')
     plt.show()
         
+    print('Begin training...')
     model.fit([X_train[:,0], X_train[:,1]], y_train,
               validation_data = ([X_val[:,0], X_val[:,1]], y_val),
               batch_size=128,
               nb_epoch=10)
               
     time.sleep(3)
-    print('Saving model..')    
+    print('Training finished.')
+    #print('Saving model..')    
     #model.save('models/best_model.h5')
-    print('Model saved.')
+    #print('Model saved.')
     
     trained_pred_pos = model.predict([pos_pairs[:,0], pos_pairs[:,1]])
     trained_pred_neg = model.predict([neg_pairs[:,0], neg_pairs[:,1]])
     
     #Density plot of distances after training
+    print('Plotting density of distances.. (please exit plot window to continue.)')    
     plt.figure(figsize=(4,4))   
     plt.xlabel('Distance')
     plt.ylabel('Frequency')
