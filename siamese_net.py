@@ -210,7 +210,8 @@ def train_and_predict(csv_file, build_new=True):
     
 
 def evaluate_model(csv_file):
-    # Compute final performance metric (ROC-AUC) on test set
+    '''Computes & plots final performance metric (ROC-AUC) on test set.
+    '''
     y_test, y_pred = train_and_predict(csv_file)
     
     y_pred = 1 - y_pred 
