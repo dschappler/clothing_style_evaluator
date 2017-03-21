@@ -1,3 +1,11 @@
+''' Trains and evaluates a siamese convolutional network on pairs of amazon.com
+clothing and jewelry product images with the aim to learn stylistic visual similarity.
+
+The basic siamese framework in keras is set up in the style of 
+https://github.com/fchollet/keras/blob/master/examples/mnist_siamese_graph.py
+
+'''
+
 from __future__ import absolute_import
 from __future__ import print_function
 import time
@@ -18,6 +26,15 @@ from sklearn.metrics import roc_curve, roc_auc_score
 from sklearn.cross_validation import train_test_split
 
 
+
+def contrastive_loss(y_true, y_pred):
+    '''Contrastive loss from Hadsell-et-al.'06
+    http://yann.lecun.com/exdb/publis/pdf/hadsell-chopra-lecun-06.pdf
+    '''
+    margin = 1
+    return K.mean(y_true * K.square(y_pred) + (1 - y_true) * K.square(K.maximum(margin - y_pred, 0)))
+
+
 def euclidean_distance(vects):
     x, y = vects
     return K.sqrt(K.sum(K.square(x - y), axis=1, keepdims=True))
@@ -28,16 +45,8 @@ def eucl_dist_output_shape(shapes):
     return (shape1[0], 1)
 
 
-def contrastive_loss(y_true, y_pred):
-    '''Contrastive loss from Hadsell-et-al.'06
-    http://yann.lecun.com/exdb/publis/pdf/hadsell-chopra-lecun-06.pdf
-    '''
-    margin = 1
-    return K.mean(y_true * K.square(y_pred) + (1 - y_true) * K.square(K.maximum(margin - y_pred, 0)))
-
-
 def vgg16():
-    '''Base network to be shared (eq. to feature extraction).
+    '''Convolutional base network to be shared, removed top layer.
     '''
     seq = Sequential()
     seq.add(VGG16(weights='imagenet', include_top=False, input_tensor=Input(shape=(3,224,224,))))
@@ -46,12 +55,18 @@ def vgg16():
     
 
 def create_base_network():
+    '''Top layer that is actually to be trained.
+    '''
     seq = Sequential()
     seq.add(Dense(128, activation='relu', W_regularizer=l2(1.25e-4), input_dim=25088)) 
     return seq
 
 
 def load_and_preprocess(csv_file, root_url='http://ecx.images-amazon.com/images/I/'):
+    '''Converts the raw strings from the dataset into working URLs and opens 
+    the underlying images, followed by preprocessing these images to be an input 
+    to VGG16 and pushing them through VGG16.
+    '''
     data = pd.read_csv(csv_file, sep=';')
     k = 1
     
@@ -83,14 +98,16 @@ def load_and_preprocess(csv_file, root_url='http://ecx.images-amazon.com/images/
 
 
 def feature_scaling(data):
+    '''MinMax Scaling into the (0,1)-interval.
+    '''
     max_value = np.max(data)
     data /= max_value
     return data
     
 
-def create_pairdata():
+def create_pairdata(csv_file):
     pairdata = []
-    data = load_and_preprocess('data/data_mini.csv') 
+    data = load_and_preprocess(csv_file) 
     for i in range(len(data)):
         pic_1 = data['pic1'][i][0]
         pic_2 = data['pic2'][i][0]
@@ -99,8 +116,10 @@ def create_pairdata():
     return np.asarray(pairdata), np.asarray(labels)
    
 
-def split_pairdata():
-    pairdata, labels = create_pairdata()
+def split_pairdata(csv_file):
+    '''Two splits with the goal of an 80/20/20-Train/Val/Test split.
+    '''
+    pairdata, labels = create_pairdata(csv_file)
     pairdata = feature_scaling(pairdata)
     print('Splitting data to get test set..') 
     X, X_test, y, y_test = train_test_split(pairdata, labels, 
@@ -116,20 +135,14 @@ def split_pairdata():
                                                       
     return X_train, X_val, X_test, y_train, y_val, y_test  
     
-    
-def compute_accuracy(predictions, labels):
-    '''Compute classification accuracy with a fixed threshold on distances.
-    '''
-    return labels[predictions.ravel() < 0.5].mean()
-
-   
+      
 def siam_cnn():
+    '''Models the siamese architecture in keras.
+    '''
     base_network = create_base_network()
     input_a = Input(shape=(25088,))
     input_b = Input(shape=(25088,))
-    # because we re-use the same instance `base_network`,
-    # the weights of the network
-    # will be shared across the two branches
+    # the weights of the network are shared across the two branches
     processed_a = base_network(input_a)
     processed_b = base_network(input_b)
     distance = Lambda(euclidean_distance, output_shape=eucl_dist_output_shape)([processed_a, processed_b])
@@ -137,9 +150,12 @@ def siam_cnn():
     return model
     
 
-def train_and_predict(build_new=True):
-    
-    X_train, X_val, X_test, y_train, y_val, y_test = split_pairdata()
+def train_and_predict(csv_file, build_new=True):
+    ''' Build and train a new model or continue training a saved model. Includes 
+    density plots of distances between the images of positive and negative pairs 
+    before and after training for a first sanity and consistency check.
+    '''
+    X_train, X_val, X_test, y_train, y_val, y_test = split_pairdata(csv_file)
     
     pos_pairs = np.concatenate((X_train[y_train==1], X_val[y_val==1], X_test[y_test==1]))
     neg_pairs = np.concatenate((X_train[y_train==0], X_val[y_val==0], X_test[y_test==0]))
@@ -156,6 +172,7 @@ def train_and_predict(build_new=True):
     untrained_pred_pos = model.predict([pos_pairs[:,0], pos_pairs[:,1]])
     untrained_pred_neg = model.predict([neg_pairs[:,0], neg_pairs[:,1]])
     
+    #Density plot of distances before training
     plt.figure(figsize=(4,4))
     plt.xlabel('Distance')
     plt.ylabel('Frequency')  
@@ -170,7 +187,7 @@ def train_and_predict(build_new=True):
               batch_size=128,
               nb_epoch=10)
               
-    time.sleep(5)
+    time.sleep(3)
     print('Saving model..')    
     #model.save('models/best_model.h5')
     print('Model saved.')
@@ -178,6 +195,7 @@ def train_and_predict(build_new=True):
     trained_pred_pos = model.predict([pos_pairs[:,0], pos_pairs[:,1]])
     trained_pred_neg = model.predict([neg_pairs[:,0], neg_pairs[:,1]])
     
+    #Density plot of distances after training
     plt.figure(figsize=(4,4))   
     plt.xlabel('Distance')
     plt.ylabel('Frequency')
@@ -191,17 +209,15 @@ def train_and_predict(build_new=True):
     return y_test, y_pred
     
 
-def evaluate_model():
-    # compute final accuracy on training and test sets
-    y_test, y_pred = train_and_predict()
-    te_acc = compute_accuracy(y_pred, y_test)
-    print('* Accuracy on test set: %0.2f%%' % (100 * te_acc))
+def evaluate_model(csv_file):
+    # Compute final performance metric (ROC-AUC) on test set
+    y_test, y_pred = train_and_predict(csv_file)
     
     y_pred = 1 - y_pred 
     fpr, tpr, thresholds = roc_curve(y_test, y_pred)
     roc_auc = roc_auc_score(y_test, y_pred)
     
-    # Plot of a ROC curve
+    # Plot the ROC curve
     plt.figure(figsize=(6,6))
     plt.plot(fpr, tpr, label='ROC (area = %0.3f)' % roc_auc)
     plt.plot([0, 1], [0, 1], 'k--')
@@ -217,4 +233,4 @@ def evaluate_model():
     
 
 if __name__ == '__main__':
-    evaluate_model()
+    evaluate_model('data/data_mini.csv')
