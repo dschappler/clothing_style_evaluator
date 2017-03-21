@@ -1,3 +1,8 @@
+'''Application that evaluates the stylistic visual similarity of a pair of user
+input images of clothes or jewelry. Uses the learned weights from training the 
+siamese network.
+'''
+
 from __future__ import absolute_import
 from __future__ import print_function
 import sys
@@ -10,10 +15,16 @@ from keras.applications.vgg16 import preprocess_input, VGG16
 from keras.models import Sequential, load_model
 from keras.layers import Input, Flatten
 
+
+#Load trained model and value for rescaling
 model = load_model('models/best_model.h5', custom_objects={'contrastive_loss': contrastive_loss})
 max_value = np.load('data/max_value.npy')
 
+
 def local_or_url():
+    '''Lets a user choose between loading an image from a local drive or from 
+    the internet. Preprocesses the image to be an input to VGG16.
+    '''
     mode = raw_input('Do you want to use a local image or an image-URL? Enter "local" for a local image or "url" for an image-URL: ')
     if mode == 'local':
         path = raw_input('Please enter the local image path: ')
@@ -36,7 +47,8 @@ def local_or_url():
     img = np.expand_dims(img, axis=0)
     img = preprocess_input(img)
     return img
-    
+   
+   
 def push_through_vgg():
     img = local_or_url()
     seq = Sequential()
@@ -49,10 +61,15 @@ def push_through_vgg():
     
     
 def evaluate():
+    '''Calculates the image difference in the latent style space and evaluates
+    if the styles match and go well together.
+    '''
     print('Image 1 of 2:')
+    #rescaling
     img_1 = push_through_vgg() / max_value
     time.sleep(1)
     print('Image 2 of 2:')
+    #rescaling
     img_2 = push_through_vgg() / max_value
     time.sleep(1)
     print('Calculating the score...')
