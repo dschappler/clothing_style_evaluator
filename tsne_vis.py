@@ -1,3 +1,8 @@
+'''Plotting a 2D-embedding of the 128D-stylespace that is the output of our 
+siamese net. Uses the image_scatter() function from 
+https://gist.github.com/lukemetz/be6123c7ee3b366e333a
+'''
+
 import numpy as np
 import pandas as pd
 import cStringIO, urllib
@@ -9,7 +14,10 @@ from sklearn.manifold import TSNE
 from skimage.transform import resize
 
 
-def prepare_model_and_data():
+def prepare_model_and_data(csv_file):
+    '''Loads the learned weights and initialize a network with them. Then, 
+    transfers a data sample of product images into the 128D-stylespace.
+    '''
     trained_model = load_model('models/best_model.h5', 
                                custom_objects={'contrastive_loss': contrastive_loss})
     
@@ -17,7 +25,7 @@ def prepare_model_and_data():
     weights_layer = np.asarray([trained_model.layers[2].get_weights()[0], trained_model.layers[2].get_weights()[1]])
     top_model.layers[0].set_weights(weights_layer)
 
-    pairdata, _ = create_pairdata()
+    pairdata, _ = create_pairdata(csv_file)
     max_value = np.load('data/max_value.npy')
     pairdata /= max_value
     imgstream = pairdata[:,0]
@@ -25,8 +33,11 @@ def prepare_model_and_data():
     return pred
 
 
-def prepare_images():
-    data = pd.read_csv('data/data_mini.csv', sep=";")['pic1']
+def prepare_images(csv_file):
+    '''Loads the RGB images of the above data sample in order to plot them into
+    our 2D-embedding.
+    '''
+    data = pd.read_csv(csv_file, sep=";")['pic1']
     root_url = 'http://ecx.images-amazon.com/images/I/'
     for i in range(len(data)): 
         data[i] = root_url + data[i]
@@ -37,20 +48,18 @@ def prepare_images():
     return data
     
 
-def tsne():
-    pred = prepare_model_and_data()
+def tsne(csv_file):
+    '''Dimensionality reduction from 128D to 2D via the t-SNE algorithm.
+    '''
+    pred = prepare_model_and_data(csv_file)
     tsne = TSNE()
     tsne_transformed = tsne.fit_transform(pred)
-    plt.figure()
-    plt.scatter(x=tsne_transformed[:,0], y=tsne_transformed[:,1])
-    plt.show()
     return tsne_transformed
 
     
 def min_resize(img, size):
-    """
-    Resize an image so that it is size along the minimum spatial dimension.
-    """
+    '''Resize an image so that it is size along the minimum spatial dimension.
+    '''
     w, h = map(float, img.shape[:2])
     if min([w, h]) != size:
         if w <= h:
@@ -60,38 +69,16 @@ def min_resize(img, size):
     return img
     
     
-def image_scatter(img_res=150, res=8000, cval=1.):
-    """
-    Embeds images via tsne into a scatter plot.
-
-    Parameters
-    ---------
-    features: numpy array
-        Features to visualize
-
-    images: list or numpy array
-        Corresponding images to features. Expects float images from (0,1).
-
-    img_res: float or int
-        Resolution to embed images at
-
-    res: float or int
-        Size of embedding image in pixels
-
-    cval: float or numpy array
-        Background color value
-
-    Returns
-    ------
-    canvas: numpy array
-        Image of visualization
-    """
-    images = prepare_images()
+def image_scatter(csv_file, img_res=150, res=8000):
+    '''Embeds the loaded RGB images with a fixed resolution into a 2D scatter 
+    plot with another fixed resolution.
+    '''
+    images = prepare_images(csv_file)
     images = [min_resize(image, img_res) for image in images]
     max_width = max([image.shape[0] for image in images])
     max_height = max([image.shape[1] for image in images])
 
-    f2d = tsne()
+    f2d = tsne(csv_file)
 
     xx = f2d[:, 0]
     yy = f2d[:, 1]
@@ -107,7 +94,7 @@ def image_scatter(img_res=150, res=8000, cval=1.):
         res_x = res
         res_y = sy/float(sx)*res
 
-    canvas = np.ones((res_x+max_width, res_y+max_height, 3))*cval
+    canvas = np.ones((res_x+max_width, res_y+max_height, 3))
     x_coords = np.linspace(x_min, x_max, res_x)
     y_coords = np.linspace(y_min, y_max, res_y)
     for x, y, image in zip(xx, yy, images):
@@ -123,4 +110,4 @@ def image_scatter(img_res=150, res=8000, cval=1.):
     
     
 if __name__=='__main__':
-    image_scatter()
+    image_scatter('data/data_mini.csv')
