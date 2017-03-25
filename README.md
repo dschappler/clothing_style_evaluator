@@ -24,16 +24,16 @@ TODO: Write usage instructions
 
 ### Scripts
 
-* ```siamese_net.py```: 
+* ```siamese_net.py```: Trains and evaluates a siamese convolutional network on pairs of amazon.com clothing and jewelry product images with the aim to learn stylistic visual similarity.
 
-* ```style_evaluator.py```: 
+* ```style_evaluator.py```: Application that evaluates the stylistic visual similarity of a pair of user input images of clothes or jewelry. Uses the learned weights from training the siamese network. Also the main input for ```Clothing_Style_Evaluator.ipynb```.
 
-* ```tsne_vis.py```: 
+* ```tsne_vis.py```: Plotting a 2D-embedding of the 128D-stylespace that is the output of our siamese net.
 
 
 ### Report
 
-A final report explaining this project and the surrounding problem domain is available as ```report.pdf```.
+For more insight and further information about this project and the surrounding problem domain, a report is available as ```report.pdf```.
 
 ### Dataset
 
