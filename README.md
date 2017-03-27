@@ -3,7 +3,7 @@ TODO: Write a project description
 
 ### Installation / Requirements
 
-This project requires **Python 2.7** and the following Python packages installed:
+1. This project requires **Python 2.7** and the following Python packages installed:
 
 - [keras] on [Theano]
 - [matplotlib]
@@ -16,11 +16,39 @@ This project requires **Python 2.7** and the following Python packages installed
 - [scikit-learn] (0.17.x)
 
 
-In addition to that, download the fully trained model by using the URL given in ```models/model_url.txt``` or clicking [this link](https://docs.google.com/uc?export=download&confirm=WXIN&id=0B2CX6USTeTN7clJHdkMzYjhfaU0). Make sure to save it as ```models/best_model.h5```.
+2. Download the fully trained model by using the URL given in ```models/model_url.txt``` or clicking [this link](https://docs.google.com/uc?export=download&confirm=WXIN&id=0B2CX6USTeTN7clJHdkMzYjhfaU0). Make sure to save it as ```models/best_model.h5```.
+
+3. If not already your current setting, change the precision that `keras` uses by setting `"floatx": "float64"` in  `~/.keras/keras.json`.
 
 
 ### Usage
-TODO: Write usage instructions
+
+text
+
+```Image 1 of 2:
+Do you want to use a local image or an image-URL? Enter "local" for a local image or "url" for an image-URL: local
+Please enter the local image path: C:\Users\dschappler\Pictures\matching_1.jpg
+Loading your image...
+Image successfully loaded.
+```
+
+text
+
+```Image 2 of 2:
+Do you want to use a local image or an image-URL? Enter "local" for a local image or "url" for an image-URL: url
+Please enter the image-URL: https://raw.githubusercontent.com/dschappler/clothing_style_evaluator/master/example_images/matching_2.jpg
+Loading your image...
+Image successfully loaded.
+```
+
+text
+
+```
+Calculating the score...
+This outfit gets a score of 0.57.
+Your result:
+Nice, this looks good together!
+```
 
 ### Scripts
 
@@ -40,9 +68,7 @@ For more insight and further information about this project and the surrounding 
 
 
 
-[//]: # (These are reference links used in the body of this note and get stripped out when the markdown processor does its job. There is no need to format nicely because it shouldn't be seen. Thanks SO - http://stackoverflow.com/questions/4823468/store-comments-in-markdown-syntax)
-
-
+[//]: #
    
 [NumPy]: <http://www.numpy.org>
 [pandas]: <http://pandas.pydata.org/>
