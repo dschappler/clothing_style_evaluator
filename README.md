@@ -77,7 +77,9 @@ For more insight and further information about this project and the surrounding 
 
 ### Dataset
 
+We use a processed subset of the data set used in [Veit et al.] (available at https://goo.gl/blgCC2), which itself uses the large scale data set provided from [McAuley et al.]. The latter consists of product images from amazon.com, their respective product categories and product co-purchase information. A large majority of the images are iconic and have a white background, only some products are shown in a full-body picture.
 
+Veit et al. only focus on the Clothing, Shoes and Jewelry category and its subcategories. As they are explicitly interested in cross-category fit, they use a strategic method to sample training data where pairs of data are so-called "heterogeneous dyadic co-occurences" (the two elements of a pair belong to different high-level categories and frequently co-occur).
 
 
 [//]: # (These are reference links used in the body of this note and get stripped out when the markdown processor does its job. There is no need to format nicely because it shouldn't be seen. Thanks SO - http://stackoverflow.com/questions/4823468/store-comments-in-markdown-syntax)
@@ -94,3 +96,5 @@ For more insight and further information about this project and the surrounding 
 [seaborn]: <https://seaborn.pydata.org/>
 [scikit-image]: <http://scikit-image.org/>
 [scikit-learn]: <http://scikit-learn.org>
+[Veit et al.]: <https://arxiv.org/pdf/1509.07473v1.pdf>
+[McAuley et al.]: <http://jmcauley.ucsd.edu/data/amazon/>
