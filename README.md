@@ -25,6 +25,8 @@ TODO: Write a project description
 
 text
 
+<img src="https://raw.githubusercontent.com/dschappler/clothing_style_evaluator/master/example_images/matching_1.jpg" height="250" />
+
 ```Image 1 of 2:
 Do you want to use a local image or an image-URL? Enter "local" for a local image or "url" for an image-URL: local
 Please enter the local image path: C:\Users\dschappler\Pictures\matching_1.jpg
@@ -33,6 +35,8 @@ Image successfully loaded.
 ```
 
 text
+
+<img src="https://raw.githubusercontent.com/dschappler/clothing_style_evaluator/master/example_images/matching_2.jpg" height="250" />
 
 ```Image 2 of 2:
 Do you want to use a local image or an image-URL? Enter "local" for a local image or "url" for an image-URL: url
@@ -68,7 +72,9 @@ For more insight and further information about this project and the surrounding 
 
 
 
-[//]: #
+[//]: # (These are reference links used in the body of this note and get stripped out when the markdown processor does its job. There is no need to format nicely because it shouldn't be seen. Thanks SO - http://stackoverflow.com/questions/4823468/store-comments-in-markdown-syntax)
+
+
    
 [NumPy]: <http://www.numpy.org>
 [pandas]: <http://pandas.pydata.org/>
@@ -80,5 +86,3 @@ For more insight and further information about this project and the surrounding 
 [seaborn]: <https://seaborn.pydata.org/>
 [scikit-image]: <http://scikit-image.org/>
 [scikit-learn]: <http://scikit-learn.org>
-
-
