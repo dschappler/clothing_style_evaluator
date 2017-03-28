@@ -24,7 +24,7 @@ TODO: Write a project description
 ### Usage
 
 The Style Evaluator works with both locally stored product images and image-URLs. 
-Just run `python style_evaluator.py` in your command window or execute the first code cell of `Style_Evaluator.ipynb` and follow the instructions.
+Just run `python style_evaluator.py` in your command window or execute the first code cell of `Clothing_Style_Evaluator.ipynb` and follow the instructions.
 
 For example, if we want to use a locally stored image of a jacket,
 
