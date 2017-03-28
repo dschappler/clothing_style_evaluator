@@ -23,9 +23,15 @@ TODO: Write a project description
 
 ### Usage
 
-text
+The Style Evaluator works with both locally stored product images and image-URLs. 
+Just run `python style_evaluator.py` in your command window or execute the first code cell of `Style_Evaluator.ipynb` and follow the instructions.
+
+For example, if we want to use a locally stored image of a jacket,
 
 <img src="https://raw.githubusercontent.com/dschappler/clothing_style_evaluator/master/example_images/matching_1.jpg" height="250" />
+
+we answer `local` to the first question and enter the local image path as an answer to the second question.
+
 
 ```Image 1 of 2:
 Do you want to use a local image or an image-URL? Enter "local" for a local image or "url" for an image-URL: local
@@ -34,9 +40,11 @@ Loading your image...
 Image successfully loaded.
 ```
 
-text
+We want to evaluate the combination of our jacket and some dress pants we found in an online store,
 
 <img src="https://raw.githubusercontent.com/dschappler/clothing_style_evaluator/master/example_images/matching_2.jpg" height="250" />
+
+so we answer `url` this time to the first question and enter the image-URL as an answer to the second question.
 
 ```Image 2 of 2:
 Do you want to use a local image or an image-URL? Enter "local" for a local image or "url" for an image-URL: url
@@ -45,7 +53,7 @@ Loading your image...
 Image successfully loaded.
 ```
 
-text
+After the images are loaded, the stylistic similarity of the image pair gets evaluated:
 
 ```
 Calculating the score...
