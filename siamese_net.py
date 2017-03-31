@@ -117,7 +117,7 @@ def create_pairdata(csv_file):
    
 
 def split_pairdata(csv_file):
-    '''Two splits with the goal of an 60/20/20-Train/Val/Test split.
+    '''Two splits with the goal of an 60%/20%/20%-Train/Val/Test split.
     '''
     pairdata, labels = create_pairdata(csv_file)
     pairdata = feature_scaling(pairdata)
