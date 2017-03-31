@@ -1,5 +1,10 @@
 # Clothing Style Evaluator
-TODO: Write a project description
+
+There is a small but important difference between visual similarity and visual _style_ similarity: Two visually very different items (a brown leather belt and a brown leather purse, for example) can very well be stylistically similar, while visually similar shoes (cowboy boots, gumboots and UGG boots, for example) are hardly stylistically similar. 
+
+In this project, we learn a feature transformation of clothing and accessory product images into items in a latent, 128-dimensional "style space" that understands compatibility in the sense of _stylistic similarity_. The questions we are able to answer with our trained network are not of the form "Are these items shoes?" or "Is there a belt in this picture?", but rather "Do these shoes match this belt?" or "Are these two women's dresses the same style?". 
+
+We achieve this feature transformation by means of training a siamese convolutional neural network with example pairs, each of two product images that are either similar or dissimilar in style.
 
 ### Installation / Requirements
 
