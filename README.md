@@ -69,7 +69,7 @@ Nice, this looks good together!
 
 ### Scripts
 
-* ```siamese_net.py```: Trains and evaluates a siamese convolutional network on pairs of amazon.com clothing and jewelry product images with the aim to learn stylistic visual similarity.
+* ```siamese_net.py```: Trains and evaluates a siamese convolutional network on pairs of amazon.com clothing and jewelry product images with the aim to learn stylistic visual similarity. Running this script takes roughly 20 minutes on a standard CPU and uses a smaller sample of the full data set. To reproduce the results found in the accompanying report, just change the last line from `evaluate_model('data/data_mini.csv')` to `evaluate_model('data/data.csv')`. Running this script on the full data set obviously increases the runtime substantially.
 
 * ```style_evaluator.py```: Application that evaluates the stylistic visual similarity of a pair of user input images of clothes or jewelry. Uses the learned weights from training the siamese network. Also the main input for ```Clothing_Style_Evaluator.ipynb```.
 
